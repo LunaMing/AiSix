@@ -41,7 +41,7 @@ public class Evaluate {
         //对每一点的价值进行初始化，越靠中心价值越大
         for (int i = 0; i <= ChessBoard.COLS / 2; i++) {
             for (int j = 0; j <= ChessBoard.ROWS / 2; j++) {
-                staticValue[i][j] = i < j ? i : j;
+                staticValue[i][j] = Math.min(i, j);
                 staticValue[ChessBoard.COLS - i][j] = staticValue[i][j];
                 staticValue[i][ChessBoard.ROWS - j] = staticValue[i][j];
                 staticValue[ChessBoard.COLS - i][ChessBoard.ROWS - j] = staticValue[i][j];
@@ -54,8 +54,8 @@ public class Evaluate {
         int l, t, r, b;
         l = (chessBoard.left > 2) ? chessBoard.left - 2 : 0;
         t = (chessBoard.top > 2) ? chessBoard.top - 2 : 0;
-        r = (chessBoard.right < chessBoard.COLS - 1) ? chessBoard.right + 2 : chessBoard.COLS;
-        b = (chessBoard.bottom < chessBoard.ROWS - 1) ? chessBoard.bottom + 2 : chessBoard.ROWS;
+        r = (chessBoard.right < ChessBoard.COLS - 1) ? chessBoard.right + 2 : ChessBoard.COLS;
+        b = (chessBoard.bottom < ChessBoard.ROWS - 1) ? chessBoard.bottom + 2 : ChessBoard.ROWS;
         for (int i = l; i <= r; i++) {
             for (int j = t; j <= b; j++) {//对棋盘的所有点循环
                 blackValue[i][j] = 0;
@@ -73,7 +73,7 @@ public class Evaluate {
     /**
      * 获取计算机的最佳下棋位置
      *
-     * @return：最佳位置的坐标
+     * @return 最佳位置的坐标
      */
     int[] getTheBestPosition() {
         getTheSpaceValues();
@@ -81,7 +81,7 @@ public class Evaluate {
         int value;
         int[] position = new int[2];
 
-        int valuablePositions[][] = getTheMostValuablePositions();
+        int[][] valuablePositions = getTheMostValuablePositions();
 
         for (int i = 0; i < valuablePositions.length; i++) {
             if (valuablePositions[i][2] >= SIX) {   //已经连六
@@ -118,7 +118,7 @@ public class Evaluate {
 
     /**
      * @param depth：搜索的深度
-     * @return
+     * @return //todo
      */
     private int min(int depth, int alpha, int beta) {
         if (depth == 0) { //如果搜索到最底层，直接返回当前的估值。
@@ -126,23 +126,22 @@ public class Evaluate {
         }
         getTheSpaceValues();
 
-        int value;
-        int valuablePositions[][] = getTheMostValuablePositions();
+        int[][] valuablePositions = getTheMostValuablePositions();
 
-        for (int i = 0; i < valuablePositions.length; i++) {
-            chessBoard.boardStatus[valuablePositions[i][0]][valuablePositions[i][1]] = chessBoard.computerColor == 1 ? 2 : 1;
+        for (int[] valuablePosition : valuablePositions) {
+            chessBoard.boardStatus[valuablePosition[0]][valuablePosition[1]] = chessBoard.computerColor == 1 ? 2 : 1;
             int oldLeft = chessBoard.left;
             int oldTop = chessBoard.top;
             int oldRight = chessBoard.right;
             int oldBottom = chessBoard.bottom;
-            if (chessBoard.left > valuablePositions[i][0]) chessBoard.left = valuablePositions[i][0];
-            if (chessBoard.top > valuablePositions[i][1]) chessBoard.top = valuablePositions[i][1];
-            if (chessBoard.right < valuablePositions[i][0]) chessBoard.right = valuablePositions[i][0];
-            if (chessBoard.bottom < valuablePositions[i][1]) chessBoard.bottom = valuablePositions[i][1];
+            if (chessBoard.left > valuablePosition[0]) chessBoard.left = valuablePosition[0];
+            if (chessBoard.top > valuablePosition[1]) chessBoard.top = valuablePosition[1];
+            if (chessBoard.right < valuablePosition[0]) chessBoard.right = valuablePosition[0];
+            if (chessBoard.bottom < valuablePosition[1]) chessBoard.bottom = valuablePosition[1];
 
-            value = max(depth - 1, alpha, beta);
+            int value = max(depth - 1, alpha, beta);
 
-            chessBoard.boardStatus[valuablePositions[i][0]][valuablePositions[i][1]] = 0;
+            chessBoard.boardStatus[valuablePosition[0]][valuablePosition[1]] = 0;
             chessBoard.left = oldLeft;
             chessBoard.top = oldTop;
             chessBoard.right = oldRight;
@@ -160,7 +159,7 @@ public class Evaluate {
 
     /**
      * @param depth：搜索的深度
-     * @return
+     * @return //todo
      */
     private int max(int depth, int alpha, int beta) {
         if (depth == 0) { //如果搜索到最底层，直接返回当前的估值。
@@ -169,7 +168,7 @@ public class Evaluate {
         getTheSpaceValues();
 
         int value;
-        int valuablePositions[][] = getTheMostValuablePositions();
+        int[][] valuablePositions = getTheMostValuablePositions();
 
         for (int i = 0; i < valuablePositions.length; i++) {
             chessBoard.boardStatus[valuablePositions[i][0]][valuablePositions[i][1]] = chessBoard.computerColor;
@@ -230,10 +229,10 @@ public class Evaluate {
     /**
      * 计算棋盘上指定空位在指定方向价值
      *
-     * @param color 要计算的是哪一方的价值，1：黑方，2：白方
-     * @param colomn   要计算位置的列坐标
-     * @param row   要计算位置的行坐标
-     * @param direction   要计算方向，1：水平，2：垂直，3：左上到右下，4：右上到左下
+     * @param color     要计算的是哪一方的价值，1：黑方，2：白方
+     * @param colomn    要计算位置的列坐标
+     * @param row       要计算位置的行坐标
+     * @param direction 要计算方向，1：水平，2：垂直，3：左上到右下，4：右上到左下
      * @return 价值
      */
     private int evaluateValue(int color, int colomn, int row, int direction) {
@@ -249,7 +248,7 @@ public class Evaluate {
         switch (direction) {
             case 1: //水平方向
                 //向增加的方向查找相同颜色连续的棋子
-                for (k = colomn + 1; k <= chessBoard.COLS; k++) {
+                for (k = colomn + 1; k <= ChessBoard.COLS; k++) {
                     if (chessBoard.boardStatus[k][row] == color) {
                         chessCount1++;
                     } else {
@@ -257,16 +256,16 @@ public class Evaluate {
                     }
                 }
                 //在棋子尽头查找连续的空格数
-                while ((k <= chessBoard.COLS) && (chessBoard.boardStatus[k][row] == 0)) {
+                while ((k <= ChessBoard.COLS) && (chessBoard.boardStatus[k][row] == 0)) {
                     spaceCount1++;
                     k++;
                 }
                 if (spaceCount1 == 1) {
-                    while ((k <= chessBoard.COLS) && (chessBoard.boardStatus[k][row] == color)) {
+                    while ((k <= ChessBoard.COLS) && (chessBoard.boardStatus[k][row] == color)) {
                         chessCount2++;
                         k++;
                     }
-                    while ((k <= chessBoard.COLS) && (chessBoard.boardStatus[k][row] == 0)) {
+                    while ((k <= ChessBoard.COLS) && (chessBoard.boardStatus[k][row] == 0)) {
                         spaceCountOtherSide1++;
                         k++;
                     }
@@ -298,7 +297,7 @@ public class Evaluate {
                 break;
             case 2:  //  垂直方向
                 //向增加的方向查找相同颜色连续的棋子
-                for (k = row + 1; k <= chessBoard.ROWS; k++) {
+                for (k = row + 1; k <= ChessBoard.ROWS; k++) {
                     if (chessBoard.boardStatus[colomn][k] == color) {
                         chessCount1++;
                     } else {
@@ -306,16 +305,16 @@ public class Evaluate {
                     }
                 }
                 //在棋子尽头查找连续的空格数
-                while ((k <= chessBoard.ROWS) && (chessBoard.boardStatus[colomn][k] == 0)) {
+                while ((k <= ChessBoard.ROWS) && (chessBoard.boardStatus[colomn][k] == 0)) {
                     spaceCount1++;
                     k++;
                 }
                 if (spaceCount1 == 1) {
-                    while ((k <= chessBoard.ROWS) && (chessBoard.boardStatus[colomn][k] == color)) {
+                    while ((k <= ChessBoard.ROWS) && (chessBoard.boardStatus[colomn][k] == color)) {
                         chessCount2++;
                         k++;
                     }
-                    while ((k <= chessBoard.ROWS) && (chessBoard.boardStatus[colomn][k] == 0)) {
+                    while ((k <= ChessBoard.ROWS) && (chessBoard.boardStatus[colomn][k] == 0)) {
                         spaceCountOtherSide1++;
                         k++;
                     }
@@ -347,7 +346,7 @@ public class Evaluate {
                 break;
             case 3:  //  左上到右下
                 //向增加的方向查找相同颜色连续的棋子
-                for (k = colomn + 1, m = row + 1; (k <= chessBoard.COLS) && (m <= chessBoard.ROWS); k++, m++) {
+                for (k = colomn + 1, m = row + 1; (k <= ChessBoard.COLS) && (m <= ChessBoard.ROWS); k++, m++) {
                     if (chessBoard.boardStatus[k][m] == color) {
                         chessCount1++;
                     } else {
@@ -355,18 +354,18 @@ public class Evaluate {
                     }
                 }
                 //在棋子尽头查找连续的空格数
-                while ((k <= chessBoard.COLS) && (m <= chessBoard.ROWS) && (chessBoard.boardStatus[k][m] == 0)) {
+                while ((k <= ChessBoard.COLS) && (m <= ChessBoard.ROWS) && (chessBoard.boardStatus[k][m] == 0)) {
                     spaceCount1++;
                     k++;
                     m++;
                 }
                 if (spaceCount1 == 1) {
-                    while ((k <= chessBoard.COLS) && (m <= chessBoard.ROWS) && (chessBoard.boardStatus[k][m] == color)) {
+                    while ((k <= ChessBoard.COLS) && (m <= ChessBoard.ROWS) && (chessBoard.boardStatus[k][m] == color)) {
                         chessCount2++;
                         k++;
                         m++;
                     }
-                    while ((k <= chessBoard.COLS) && (m <= chessBoard.ROWS) && (chessBoard.boardStatus[k][m] == 0)) {
+                    while ((k <= ChessBoard.COLS) && (m <= ChessBoard.ROWS) && (chessBoard.boardStatus[k][m] == 0)) {
                         spaceCountOtherSide1++;
                         k++;
                         m++;
@@ -402,50 +401,50 @@ public class Evaluate {
                 break;
 
             case 4:  //  右上到左下
-                for (k = colomn + 1, m = row - 1; k <= chessBoard.COLS && m >= 0; k++, m--) {  //查找连续的同色棋子
+                for (k = colomn + 1, m = row - 1; k <= ChessBoard.COLS && m >= 0; k++, m--) {  //查找连续的同色棋子
                     if (chessBoard.boardStatus[k][m] == color) {
                         chessCount1++;
                     } else {
                         break;
                     }
                 }
-                while (k <= chessBoard.COLS && m >= 0 && (chessBoard.boardStatus[k][m] == 0)) { //统计空位数
+                while (k <= ChessBoard.COLS && m >= 0 && (chessBoard.boardStatus[k][m] == 0)) { //统计空位数
                     spaceCount1++;
                     k++;
                     m--;
                 }
                 if (spaceCount1 == 1) {
-                    while ((k <= chessBoard.COLS) && (m >= 0) && (chessBoard.boardStatus[k][m] == color)) {
+                    while ((k <= ChessBoard.COLS) && (m >= 0) && (chessBoard.boardStatus[k][m] == color)) {
                         chessCount2++;
                         k++;
                         m--;
                     }
-                    while ((k <= chessBoard.COLS) && (m >= 0) && (chessBoard.boardStatus[k][m] == 0)) {
+                    while ((k <= ChessBoard.COLS) && (m >= 0) && (chessBoard.boardStatus[k][m] == 0)) {
                         spaceCountOtherSide1++;
                         k++;
                         m--;
                     }
                 }
 
-                for (k = colomn - 1, m = row + 1; k >= 0 && m <= chessBoard.ROWS; k--, m++) {  //查找连续的同色棋子
+                for (k = colomn - 1, m = row + 1; k >= 0 && m <= ChessBoard.ROWS; k--, m++) {  //查找连续的同色棋子
                     if (chessBoard.boardStatus[k][m] == color) {
                         chessCount1++;
                     } else {
                         break;
                     }
                 }
-                while (k >= 0 && m <= chessBoard.ROWS && (chessBoard.boardStatus[k][m] == 0)) { // 统计空位数
+                while (k >= 0 && m <= ChessBoard.ROWS && (chessBoard.boardStatus[k][m] == 0)) { // 统计空位数
                     spaceCountOtherSide2++;
                     k--;
                     m++;
                 }
                 if (spaceCountOtherSide2 == 1) {
-                    while ((k >= 0) && (m <= chessBoard.ROWS) && (chessBoard.boardStatus[k][m] == color)) {
+                    while ((k >= 0) && (m <= ChessBoard.ROWS) && (chessBoard.boardStatus[k][m] == color)) {
                         chessCount3++;
                         k--;
                         m++;
                     }
-                    while ((k >= 0) && (m <= chessBoard.ROWS) && (chessBoard.boardStatus[k][m] == 0)) {
+                    while ((k >= 0) && (m <= ChessBoard.ROWS) && (chessBoard.boardStatus[k][m] == 0)) {
                         spaceCountOtherSide3++;
                         k--;
                         m++;
@@ -468,9 +467,9 @@ public class Evaluate {
     private int[][] getTheMostValuablePositions() {
         int i, j, k = 0;
         //allValue：保存每一空位的价值(列坐标，行坐标，价值）
-        int[][] allValue = new int[(chessBoard.COLS + 1) * (chessBoard.ROWS + 1)][3];
-        for (i = 0; i < chessBoard.COLS; i++) {
-            for (j = 0; j < chessBoard.ROWS; j++) {
+        int[][] allValue = new int[(ChessBoard.COLS + 1) * (ChessBoard.ROWS + 1)][3];
+        for (i = 0; i < ChessBoard.COLS; i++) {
+            for (j = 0; j < ChessBoard.ROWS; j++) {
                 if (chessBoard.boardStatus[i][j] == 0) {
                     allValue[k][0] = i;
                     allValue[k][1] = j;
@@ -481,8 +480,8 @@ public class Evaluate {
         }
         sort(allValue);   //按价值降序排序
 
-        int size = k < SAMPLE_NUMBER ? k : SAMPLE_NUMBER;
-        int valuablePositions[][] = new int[size][3];
+        int size = Math.min(k, SAMPLE_NUMBER);
+        int[][] valuablePositions = new int[size][3];
 
         //将allValue中的前size个空位赋给bestPositions
         for (i = 0; i < size; i++) {
@@ -496,53 +495,53 @@ public class Evaluate {
     private int evaluateGame() {
         int value = 0;
         int i, j, k;
-        int[] line = new int[chessBoard.COLS + 1];
+        int[] line = new int[ChessBoard.COLS + 1];
         //水平  对每一行估值
-        for (j = 0; j <= chessBoard.ROWS; j++) {
-            for (i = 0; i <= chessBoard.COLS; i++) {
+        for (j = 0; j <= ChessBoard.ROWS; j++) {
+            for (i = 0; i <= ChessBoard.COLS; i++) {
                 line[i] = chessBoard.boardStatus[i][j];   //第一个下标是列下标
             }
-            value += evaluateLine(line, chessBoard.COLS + 1, 1);
-            value -= evaluateLine(line, chessBoard.COLS + 1, 2);
+            value += evaluateLine(line, ChessBoard.COLS + 1, 1);
+            value -= evaluateLine(line, ChessBoard.COLS + 1, 2);
         }
         // 对每一列估值
-        for (i = 0; i <= chessBoard.COLS; i++) {
-            for (j = 0; j <= chessBoard.ROWS; j++) {
+        for (i = 0; i <= ChessBoard.COLS; i++) {
+            for (j = 0; j <= ChessBoard.ROWS; j++) {
                 line[j] = chessBoard.boardStatus[i][j];
             }
-            value += evaluateLine(line, chessBoard.ROWS + 1, 1);
-            value -= evaluateLine(line, chessBoard.ROWS + 1, 2);
+            value += evaluateLine(line, ChessBoard.ROWS + 1, 1);
+            value -= evaluateLine(line, ChessBoard.ROWS + 1, 2);
         }
 
         // 左下到右上斜线估值
-        for (j = 4; j <= chessBoard.ROWS; j++) {
+        for (j = 4; j <= ChessBoard.ROWS; j++) {
             for (k = 0; k <= j; k++) {
                 line[k] = chessBoard.boardStatus[k][j - k];
             }
             value += evaluateLine(line, j + 1, 1);
             value -= evaluateLine(line, j + 1, 2);
         }
-        for (j = 1; j <= chessBoard.ROWS - 4; j++) {
-            for (k = 0; k <= chessBoard.COLS - j; k++) {
-                line[k] = chessBoard.boardStatus[k + j][chessBoard.ROWS - k];
+        for (j = 1; j <= ChessBoard.ROWS - 4; j++) {
+            for (k = 0; k <= ChessBoard.COLS - j; k++) {
+                line[k] = chessBoard.boardStatus[k + j][ChessBoard.ROWS - k];
             }
-            value += evaluateLine(line, chessBoard.ROWS + 1 - j, 1);
-            value -= evaluateLine(line, chessBoard.ROWS + 1 - j, 2);
+            value += evaluateLine(line, ChessBoard.ROWS + 1 - j, 1);
+            value -= evaluateLine(line, ChessBoard.ROWS + 1 - j, 2);
         }
         // 左上到右下斜线估值
-        for (j = 0; j <= chessBoard.ROWS - 4; j++) {
-            for (k = 0; k <= chessBoard.ROWS - j; k++) {
+        for (j = 0; j <= ChessBoard.ROWS - 4; j++) {
+            for (k = 0; k <= ChessBoard.ROWS - j; k++) {
                 line[k] = chessBoard.boardStatus[k][k + j];
             }
-            value += evaluateLine(line, chessBoard.ROWS + 1 - j, 1);
-            value -= evaluateLine(line, chessBoard.ROWS + 1 - j, 2);
+            value += evaluateLine(line, ChessBoard.ROWS + 1 - j, 1);
+            value -= evaluateLine(line, ChessBoard.ROWS + 1 - j, 2);
         }
-        for (i = 1; i <= chessBoard.COLS - 4; i++) {
-            for (k = 0; k <= chessBoard.ROWS - i; k++) {
+        for (i = 1; i <= ChessBoard.COLS - 4; i++) {
+            for (k = 0; k <= ChessBoard.ROWS - i; k++) {
                 line[k] = chessBoard.boardStatus[k + i][k];
             }
-            value += evaluateLine(line, chessBoard.ROWS + 1 - i, 1);
-            value -= evaluateLine(line, chessBoard.ROWS + 1 - i, 2);
+            value += evaluateLine(line, ChessBoard.ROWS + 1 - i, 1);
+            value -= evaluateLine(line, ChessBoard.ROWS + 1 - i, 2);
         }
         if (chessBoard.computerColor == 1) {
             return value;
@@ -551,9 +550,9 @@ public class Evaluate {
         }
     }
 
-    private int evaluateLine(int lineState[], int num, int color) {
+    private int evaluateLine(int[] lineState, int num, int color) {
         int chess, space1, space2;
-        int i, j, k;
+        int i, j;
         int value = 0;
         int begin, end;
         for (i = 0; i < num; i++)
