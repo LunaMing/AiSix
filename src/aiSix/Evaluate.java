@@ -1,5 +1,4 @@
 package aiSix;
-//@author 冯懿
 
 public class Evaluate {
     private static final int SIX = 500000;
@@ -231,8 +230,6 @@ public class Evaluate {
      * @param row   要计算位置的行坐标
      * @param dir   要计算方向，1：水平，2：垂直，3：左上到右下，4：右上到左下
      * @return 价值
-     * @author 冯懿
-     * @Time2017-12-15
      */
     private int evaluateValue(int color, int col, int row, int dir) {
         int k, m;
@@ -469,8 +466,6 @@ public class Evaluate {
      * @param spaceCount4 继chessCount3之后，连续空位数
      * @param color       棋子的颜色 1：黑子，2：白子
      * @return 该点放color棋子给color方带来的价值
-     * @author 冯懿
-     * @Time2017-12-15
      */
     private int getValue(int chessCount1, int chessCount2, int chessCount3, int spaceCount1, int spaceCount2, int spaceCount3, int spaceCount4, int color) {
         int value = 0;
@@ -527,8 +522,6 @@ public class Evaluate {
      * 查找棋盘上价值最大的几个空位，每个空位的价值等于两种棋的价值之和。
      *
      * @return 价值最大的几个空位（包括位置和估值）
-     * @author 冯懿
-     * @Time2017-12-15
      */
     private int[][] getTheMostValuablePositions() {
         int i, j, k = 0;

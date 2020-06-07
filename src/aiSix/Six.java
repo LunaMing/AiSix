@@ -15,7 +15,7 @@ public class Six extends JFrame {
     JCheckBox computerFirst;
     private JLabel statusbar;
 
-    private JLabel name = new JLabel(("By 冯懿"));
+    private JLabel name = new JLabel(("By 徐雯、刘月明、杨可"));
 
     public Six() {
         super("六子棋人机对战");
