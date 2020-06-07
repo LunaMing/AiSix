@@ -1,5 +1,7 @@
 package aiSix;
 
+
+
 public class Evaluate {
     private static final int SIX = 500000;
     private static final int HUO_FIVE = 50000;
@@ -35,6 +37,8 @@ public class Evaluate {
                 whiteValue[i][j] = 0;
             }
         }
+
+        //对每一点的价值进行初始化，越靠中心价值越大
         for (int i = 0; i <= ChessBoard.COLS / 2; i++) {
             for (int j = 0; j <= ChessBoard.ROWS / 2; j++) {
                 staticValue[i][j] = i < j ? i : j;
@@ -45,6 +49,7 @@ public class Evaluate {
         }
     }
 
+    //扩大左右，对每个空的点进行估值，每个点的分值为四个方向分值之和
     private void getTheSpaceValues() {
         int l, t, r, b;
         l = (cb.left > 2) ? cb.left - 2 : 0;
