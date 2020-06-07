@@ -449,7 +449,7 @@ public class Evaluate {
                 break;
         }
         if (chessCount1 + chessCount2 + chessCount3 + spaceCount1 + spaceCount2 + spaceCount3 + spaceCount4 >= 6) { //只有同色棋子数加两端的空位数不少于6时，才有价值
-            value = getValue(chessCount1, chessCount2, chessCount3, spaceCount1, spaceCount2, spaceCount3, spaceCount4, color);
+            value = getValue(chessCount1, chessCount2, chessCount3, spaceCount1, spaceCount2, spaceCount3, spaceCount4);
         }
         return value;
     }
@@ -581,37 +581,43 @@ public class Evaluate {
 
     /**
      * 获取不同棋型的价值
+     * 只看一层
      * 将六子棋棋型分为连六、活五、眠五、活四、眠四、活三、朦胧三、眠三、活二、眠二
      *
-     * @param chessCount
-     * @param spaceCount1
-     * @param spaceCount2
-     * @return
+     * @param chessCount          该空位置下一个棋子后同种颜色棋子连续的个数 AAA
+     * @param spaceCount          连续棋子一端的连续空位数 AOOOO
+     * @param spaceCountOtherSide 连续棋子另一端的连续空位数
+     * @return 该点放棋子会带来的价值
      */
-    private int getValue(int chessCount, int spaceCount1, int spaceCount2) {
+    private int getValue(int chessCount, int spaceCount, int spaceCountOtherSide) {
         int value = 0;
         //将六子棋棋型分为连六、活五、眠五、活四、眠四、活三、朦胧三、眠三、活二、眠二
         switch (chessCount) {
-            case 6://如果已经可以连成6子，则赢棋
+            case 6:
+                //如果已经可以连成6子，则赢棋
                 value = SIX;
                 break;
             case 5:
-                if ((spaceCount1 > 0) && (spaceCount2 > 0)) { //活五
+                if ((spaceCount > 0) && (spaceCountOtherSide > 0)) {
+                    //活五
                     value = HUO_FIVE;
                 }
                 break;
             case 4:
-                if ((spaceCount1 > 0) && (spaceCount2 > 0)) { //活四
+                if ((spaceCount > 0) && (spaceCountOtherSide > 0)) {
+                    //活四
                     value = HUO_FOUR;
                 }
                 break;
             case 3:
-                if ((spaceCount1 > 0) && (spaceCount2 > 0)) {//活三
+                if ((spaceCount > 0) && (spaceCountOtherSide > 0)) {
+                    //活三
                     value = HUO_THREE;
                 }
                 break;
             case 2:
-                if ((spaceCount1 > 0) && (spaceCount2 > 0)) { //活二
+                if ((spaceCount > 0) && (spaceCountOtherSide > 0)) {
+                    //活二
                     value = HUO_TWO;
                 }
                 break;
@@ -624,58 +630,81 @@ public class Evaluate {
 
     /**
      * 根据棋型，计算该点下一个棋子的价值
+     * 看两层，也就是防止 AAOA 的情况
      *
-     * @param chessCount1 该空位置下一个棋子后同种颜色棋子连续的个数
-     * @param spaceCount1 连续棋子一端的连续空位数
-     * @param chessCount2 如果spaceCount1为1，继续连续同种颜色棋子的个数
-     * @param spaceCount2 继chessCount2之后，连续空位数
-     * @param spaceCount3 连续棋子另一端的连续空位数
-     * @param chessCount3 如果spaceCount3为1，继续连续同种颜色棋子的个数
-     * @param spaceCount4 继chessCount3之后，连续空位数
-     * @param color       棋子的颜色 1：黑子，2：白子
-     * @return 该点放color棋子给color方带来的价值
+     * @param chessCount1          该空位置下一个棋子后同种颜色棋子连续的个数 A后边连续的A个数
+     * @param spaceCount1          连续棋子一端的连续空位数 A...AOOO O的个数
+     * @param chessCount2          如果spaceCount1 = 1，继续连续同种颜色棋子的个数 AOAAAA 后边的A的个数
+     * @param spaceCount2          继chessCount2之后，连续空位数 AOA..AOOOO O的个数
+     * @param spaceCountOtherSide1 连续棋子另一端的连续空位数
+     * @param chessCountOtherSide1 如果spaceCountOtherSide1 = 1，继续连续同种颜色棋子的个数
+     * @param spaceCountOtherSide2 继chessCountOtherSide1之后，连续空位数
+     * @return 在该点放棋子会带来的价值
      */
-    private int getValue(int chessCount1, int chessCount2, int chessCount3, int spaceCount1, int spaceCount2, int spaceCount3, int spaceCount4, int color) {
+    private int getValue(int chessCount1, int chessCount2, int chessCountOtherSide1,
+                         int spaceCount1, int spaceCount2, int spaceCountOtherSide1,
+                         int spaceCountOtherSide2) {
         int value = 0;
         //将六子棋棋型分为连六、活五、眠五、活四、眠四、活三、朦胧三、眠三、活二、眠二
+        //棋型：用A表示本颜色棋子，用B表示对方棋子，用O表示空位
         switch (chessCount1) {
-            case 6:  //如果已经可以连成6子，则赢棋
+            case 6:
+                //如果连续棋子数量为6，已经可以连成6子，则赢棋
+                //AAAAAA
                 value = SIX;
                 break;
-
             case 5:
-                if ((spaceCount1 > 0) && (spaceCount3 > 0)) { //活五
+                //如果连续棋子数量为5
+                if ((spaceCount1 > 0) && (spaceCountOtherSide1 > 0)) {
+                    //活五，也就是两边都空着，两方空白都大于零
+                    //OAAAAAO
                     value = HUO_FIVE;
-                } else if (((spaceCount1 == 0) && (spaceCount3 > 0)) || ((spaceCount1 > 0) && (spaceCount3 == 0))) {  //眠五
+                } else if (((spaceCount1 == 0) && (spaceCountOtherSide1 > 0)) ||
+                        ((spaceCount1 > 0) && (spaceCountOtherSide1 == 0))) {
+                    //眠五
+                    //一边有空位一边到头了
+                    //OAAAAAB
                     value = MIAN_FIVE;
                 }
                 break;
-
             case 4:
-                if ((spaceCount1 > 1) && (spaceCount3 > 1)) { //活四
+                if ((spaceCount1 > 1) && (spaceCountOtherSide1 > 1)) {
+                    //活四
                     value = HUO_FOUR;
-                } else if (((spaceCount1 > 1) && (spaceCount3 == 0)) || ((spaceCount1 == 0) && (spaceCount3 > 1))) {  //眠四
+                } else if (((spaceCount1 > 1) && (spaceCountOtherSide1 == 0)) ||
+                        ((spaceCount1 == 0) && (spaceCountOtherSide1 > 1))) {
+                    //眠四
                     value = MIAN_FOUR;
                 }
                 break;
             case 3:
-                if ((spaceCount1 > 2) && (spaceCount3 > 2)) { //OOOAAAOOO
+                if ((spaceCount1 > 2) && (spaceCountOtherSide1 > 2)) {
+                    //OOOAAAOOO
                     value = HUO_THREE;
-                } else if (((spaceCount1 == 0) && (spaceCount3 > 3)) || ((spaceCount3 > 3) && (chessCount3 == 0))) { // AAAOOO
+                } else if (((spaceCount1 == 0) && (spaceCountOtherSide1 > 3)) ||
+                        ((spaceCountOtherSide1 > 3) && (chessCountOtherSide1 == 0))) {
+                    //AAAOOO
                     value = MIAN_THREE;
                 }
                 break;
             case 2:
-                if ((spaceCount1 > 3) && (spaceCount3 > 3)) { //活二
+                if ((spaceCount1 > 3) && (spaceCountOtherSide1 > 3)) {
+                    //活二
                     value = HUO_TWO;
-                } else if (((spaceCount1 > 3) && (spaceCount3 == 0)) || ((spaceCount1 == 0) && (spaceCount3 > 3))) {  //眠二
+                } else if (((spaceCount1 > 3) && (spaceCountOtherSide1 == 0)) ||
+                        ((spaceCount1 == 0) && (spaceCountOtherSide1 > 3))) {
+                    //眠二
                     value = MIAN_TWO;
-                } else if (((spaceCount1 == 1) && (chessCount2 == 1) && (spaceCount2 == 2) && (spaceCount3 == 1)) || ((spaceCount1 == 1) && (chessCount3 == 1) && (spaceCount3 == 1) && (spaceCount4 == 2))) {//BOOAOAAOB
+                } else if (((spaceCount1 == 1) && (chessCount2 == 1) && (spaceCount2 == 2) && (spaceCountOtherSide1 == 1)) ||
+                        ((spaceCount1 == 1) && (chessCountOtherSide1 == 1) && (spaceCountOtherSide1 == 1) && (spaceCountOtherSide2 == 2))) {
+                    //BOOAOAAOB
                     value = MENGLONG_THREE;
                 }
                 break;
             case 1:
-                if (((spaceCount1 == 2) && (spaceCount3 == 1) && (chessCount3 == 2) && (spaceCount4 == 1)) || ((spaceCount1 == 1) && (spaceCount2 == 1) && (chessCount2 == 2) && (spaceCount3 == 2))) { // BOOAOAAOB
+                if (((spaceCount1 == 2) && (spaceCountOtherSide1 == 1) && (chessCountOtherSide1 == 2) && (spaceCountOtherSide2 == 1)) ||
+                        ((spaceCount1 == 1) && (spaceCount2 == 1) && (chessCount2 == 2) && (spaceCountOtherSide1 == 2))) {
+                    //BOOAOAAOB
                     value = MENGLONG_THREE;
                 }
                 break;
