@@ -14,14 +14,14 @@ public class Evaluate {
     private static final int MIAN_TWO = 50;
 
     private static final int LARGE_NUMBER = 10000000;
-    private static int SEARCH_DEPTH = 5;
-    private static int SAMPLE_NUMBER = 10;
+    private static final int SEARCH_DEPTH = 5;
+    private static final int SAMPLE_NUMBER = 10;
 
 
-    private ChessBoard chessBoard;
-    private int[][] blackValue;   // 保存每一空位下黑子的价值
-    private int[][] whiteValue;   // 保存每一空位下白子的价值
-    private int[][] staticValue;  // 保存每一点的位置价值，越靠中心，价值越大
+    private final ChessBoard chessBoard;
+    private final int[][] blackValue;   // 保存每一空位下黑子的价值
+    private final int[][] whiteValue;   // 保存每一空位下白子的价值
+    private final int[][] staticValue;  // 保存每一点的位置价值，越靠中心，价值越大
 
     /**
      * 构造函数
@@ -254,7 +254,7 @@ public class Evaluate {
      * @return 价值
      */
     private int evaluateValue(int color, int colomn, int row, int direction) {
-        int k, m;
+        int columnCount, rowCount;
         int value = 0;
         int chessCount1 = 1;  // 指定颜色的棋子数
         int chessCount2 = 0;  // 指定颜色的棋子数
@@ -264,212 +264,214 @@ public class Evaluate {
         int spaceCountOtherSide2 = 0; //另一端空位数
         int spaceCountOtherSide3 = 0; //另一端空位数
         switch (direction) {
-            case 1: //水平方向
+            //水平方向
+            case 1 -> {
                 //向增加的方向查找相同颜色连续的棋子
-                for (k = colomn + 1; k <= ChessBoard.COLS; k++) {
-                    if (chessBoard.boardStatus[k][row] == color) {
+                for (columnCount = colomn + 1; columnCount <= ChessBoard.COLS; columnCount++) {
+                    if (chessBoard.boardStatus[columnCount][row] == color) {
                         chessCount1++;
                     } else {
                         break;
                     }
                 }
                 //在棋子尽头查找连续的空格数
-                while ((k <= ChessBoard.COLS) && (chessBoard.boardStatus[k][row] == 0)) {
+                while ((columnCount <= ChessBoard.COLS) && (chessBoard.boardStatus[columnCount][row] == 0)) {
                     spaceCount1++;
-                    k++;
+                    columnCount++;
                 }
                 if (spaceCount1 == 1) {
-                    while ((k <= ChessBoard.COLS) && (chessBoard.boardStatus[k][row] == color)) {
+                    while ((columnCount <= ChessBoard.COLS) && (chessBoard.boardStatus[columnCount][row] == color)) {
                         chessCount2++;
-                        k++;
+                        columnCount++;
                     }
-                    while ((k <= ChessBoard.COLS) && (chessBoard.boardStatus[k][row] == 0)) {
+                    while ((columnCount <= ChessBoard.COLS) && (chessBoard.boardStatus[columnCount][row] == 0)) {
                         spaceCountOtherSide1++;
-                        k++;
+                        columnCount++;
                     }
                 }
                 //向相反方向查找相同颜色连续的棋子
-                for (k = colomn - 1; k >= 0; k--) {
-                    if (chessBoard.boardStatus[k][row] == color) {
+                for (columnCount = colomn - 1; columnCount >= 0; columnCount--) {
+                    if (chessBoard.boardStatus[columnCount][row] == color) {
                         chessCount1++;
                     } else {
                         break;
                     }
                 }
                 //在棋子的尽头查找连续的空格数
-                while (k >= 0 && (chessBoard.boardStatus[k][row] == 0)) {
+                while (columnCount >= 0 && (chessBoard.boardStatus[columnCount][row] == 0)) {
                     spaceCountOtherSide2++;
-                    k--;
+                    columnCount--;
                 }
                 if (spaceCountOtherSide2 == 1) {
-                    while ((k >= 0) && (chessBoard.boardStatus[k][row] == color)) {
+                    while ((columnCount >= 0) && (chessBoard.boardStatus[columnCount][row] == color)) {
                         chessCount3++;
-                        k--;
+                        columnCount--;
                     }
-                    while ((k >= 0) && (chessBoard.boardStatus[k][row] == 0)) {
+                    while ((columnCount >= 0) && (chessBoard.boardStatus[columnCount][row] == 0)) {
                         spaceCountOtherSide3++;
-                        k--;
+                        columnCount--;
                     }
                 }
-                break;
-            case 2:
-                //垂直方向
+            }
+            //垂直方向
+            case 2 -> {
                 //向增加的方向查找相同颜色连续的棋子
-                for (k = row + 1; k <= ChessBoard.ROWS; k++) {
-                    if (chessBoard.boardStatus[colomn][k] == color) {
+                for (columnCount = row + 1; columnCount <= ChessBoard.ROWS; columnCount++) {
+                    if (chessBoard.boardStatus[colomn][columnCount] == color) {
                         chessCount1++;
                     } else {
                         break;
                     }
                 }
                 //在棋子尽头查找连续的空格数
-                while ((k <= ChessBoard.ROWS) && (chessBoard.boardStatus[colomn][k] == 0)) {
+                while ((columnCount <= ChessBoard.ROWS) && (chessBoard.boardStatus[colomn][columnCount] == 0)) {
                     spaceCount1++;
-                    k++;
+                    columnCount++;
                 }
                 if (spaceCount1 == 1) {
-                    while ((k <= ChessBoard.ROWS) && (chessBoard.boardStatus[colomn][k] == color)) {
+                    while ((columnCount <= ChessBoard.ROWS) && (chessBoard.boardStatus[colomn][columnCount] == color)) {
                         chessCount2++;
-                        k++;
+                        columnCount++;
                     }
-                    while ((k <= ChessBoard.ROWS) && (chessBoard.boardStatus[colomn][k] == 0)) {
+                    while ((columnCount <= ChessBoard.ROWS) && (chessBoard.boardStatus[colomn][columnCount] == 0)) {
                         spaceCountOtherSide1++;
-                        k++;
+                        columnCount++;
                     }
                 }
                 //向相反方向查找相同颜色连续的棋子
-                for (k = row - 1; k >= 0; k--) {
-                    if (chessBoard.boardStatus[colomn][k] == color) {
+                for (columnCount = row - 1; columnCount >= 0; columnCount--) {
+                    if (chessBoard.boardStatus[colomn][columnCount] == color) {
                         chessCount1++;
                     } else {
                         break;
                     }
                 }
                 //在相反方向的棋子尽头查找连续的空格数
-                while (k >= 0 && (chessBoard.boardStatus[colomn][k] == 0)) {
+                while (columnCount >= 0 && (chessBoard.boardStatus[colomn][columnCount] == 0)) {
                     spaceCountOtherSide2++;
-                    k--;
+                    columnCount--;
                 }
                 if (spaceCountOtherSide2 == 1) {
-                    while ((k >= 0) && (chessBoard.boardStatus[colomn][k] == color)) {
+                    while ((columnCount >= 0) && (chessBoard.boardStatus[colomn][columnCount] == color)) {
                         chessCount3++;
-                        k--;
+                        columnCount--;
                     }
-                    while ((k >= 0) && (chessBoard.boardStatus[colomn][k] == 0)) {
+                    while ((columnCount >= 0) && (chessBoard.boardStatus[colomn][columnCount] == 0)) {
                         spaceCountOtherSide3++;
-                        k--;
+                        columnCount--;
                     }
                 }
-                break;
-            case 3:
-                //左上到右下
+            }
+            //左上到右下
+            case 3 -> {
                 //向增加的方向查找相同颜色连续的棋子
-                for (k = colomn + 1, m = row + 1; (k <= ChessBoard.COLS) && (m <= ChessBoard.ROWS); k++, m++) {
-                    if (chessBoard.boardStatus[k][m] == color) {
+                for (columnCount = colomn + 1, rowCount = row + 1; (columnCount <= ChessBoard.COLS) && (rowCount <= ChessBoard.ROWS); columnCount++, rowCount++) {
+                    if (chessBoard.boardStatus[columnCount][rowCount] == color) {
                         chessCount1++;
                     } else {
                         break;
                     }
                 }
                 //在棋子尽头查找连续的空格数
-                while ((k <= ChessBoard.COLS) && (m <= ChessBoard.ROWS) && (chessBoard.boardStatus[k][m] == 0)) {
+                while ((columnCount <= ChessBoard.COLS) && (rowCount <= ChessBoard.ROWS) && (chessBoard.boardStatus[columnCount][rowCount] == 0)) {
                     spaceCount1++;
-                    k++;
-                    m++;
+                    columnCount++;
+                    rowCount++;
                 }
                 if (spaceCount1 == 1) {
-                    while ((k <= ChessBoard.COLS) && (m <= ChessBoard.ROWS) && (chessBoard.boardStatus[k][m] == color)) {
+                    while ((columnCount <= ChessBoard.COLS) && (rowCount <= ChessBoard.ROWS) && (chessBoard.boardStatus[columnCount][rowCount] == color)) {
                         chessCount2++;
-                        k++;
-                        m++;
+                        columnCount++;
+                        rowCount++;
                     }
-                    while ((k <= ChessBoard.COLS) && (m <= ChessBoard.ROWS) && (chessBoard.boardStatus[k][m] == 0)) {
+                    while ((columnCount <= ChessBoard.COLS) && (rowCount <= ChessBoard.ROWS) && (chessBoard.boardStatus[columnCount][rowCount] == 0)) {
                         spaceCountOtherSide1++;
-                        k++;
-                        m++;
+                        columnCount++;
+                        rowCount++;
                     }
                 }
                 //向相反方向查找相同颜色连续的棋子
-                for (k = colomn - 1, m = row - 1; (k >= 0) && (m >= 0); k--, m--) {
-                    if (chessBoard.boardStatus[k][m] == color) {
+                for (columnCount = colomn - 1, rowCount = row - 1; (columnCount >= 0) && (rowCount >= 0); columnCount--, rowCount--) {
+                    if (chessBoard.boardStatus[columnCount][rowCount] == color) {
                         chessCount1++;
                     } else {
                         break;
                     }
                 }
                 //在相反方向的棋子尽头查找连续的空格数
-                while ((k >= 0) && (m >= 0) && (chessBoard.boardStatus[k][m] == 0)) {
+                while ((columnCount >= 0) && (rowCount >= 0) && (chessBoard.boardStatus[columnCount][rowCount] == 0)) {
                     spaceCountOtherSide2++;
-                    k--;
-                    m--;
+                    columnCount--;
+                    rowCount--;
                 }
                 if (spaceCountOtherSide2 == 1) {
-                    while ((k >= 0) && (m >= 0) && (chessBoard.boardStatus[k][m] == color)) {
+                    while ((columnCount >= 0) && (rowCount >= 0) && (chessBoard.boardStatus[columnCount][rowCount] == color)) {
                         chessCount3++;
-                        k--;
-                        m--;
+                        columnCount--;
+                        rowCount--;
                     }
-                    while ((k >= 0) && (m >= 0) && (chessBoard.boardStatus[k][m] == 0)) {
+                    while ((columnCount >= 0) && (rowCount >= 0) && (chessBoard.boardStatus[columnCount][rowCount] == 0)) {
                         spaceCountOtherSide3++;
-                        k--;
-                        m--;
+                        columnCount--;
+                        rowCount--;
                     }
                 }
-                break;
-            case 4:
-                //右上到左下
-                for (k = colomn + 1, m = row - 1; k <= ChessBoard.COLS && m >= 0; k++, m--) {  //查找连续的同色棋子
-                    if (chessBoard.boardStatus[k][m] == color) {
+            }
+            //右上到左下
+            case 4 -> {
+                for (columnCount = colomn + 1, rowCount = row - 1; columnCount <= ChessBoard.COLS && rowCount >= 0; columnCount++, rowCount--) {  //查找连续的同色棋子
+                    if (chessBoard.boardStatus[columnCount][rowCount] == color) {
                         chessCount1++;
                     } else {
                         break;
                     }
                 }
-                while (k <= ChessBoard.COLS && m >= 0 && (chessBoard.boardStatus[k][m] == 0)) { //统计空位数
+                while (columnCount <= ChessBoard.COLS && rowCount >= 0 && (chessBoard.boardStatus[columnCount][rowCount] == 0)) { //统计空位数
                     spaceCount1++;
-                    k++;
-                    m--;
+                    columnCount++;
+                    rowCount--;
                 }
                 if (spaceCount1 == 1) {
-                    while ((k <= ChessBoard.COLS) && (m >= 0) && (chessBoard.boardStatus[k][m] == color)) {
+                    while ((columnCount <= ChessBoard.COLS) && (rowCount >= 0) && (chessBoard.boardStatus[columnCount][rowCount] == color)) {
                         chessCount2++;
-                        k++;
-                        m--;
+                        columnCount++;
+                        rowCount--;
                     }
-                    while ((k <= ChessBoard.COLS) && (m >= 0) && (chessBoard.boardStatus[k][m] == 0)) {
+                    while ((columnCount <= ChessBoard.COLS) && (rowCount >= 0) && (chessBoard.boardStatus[columnCount][rowCount] == 0)) {
                         spaceCountOtherSide1++;
-                        k++;
-                        m--;
+                        columnCount++;
+                        rowCount--;
                     }
                 }
-                for (k = colomn - 1, m = row + 1; k >= 0 && m <= ChessBoard.ROWS; k--, m++) {  //查找连续的同色棋子
-                    if (chessBoard.boardStatus[k][m] == color) {
+                for (columnCount = colomn - 1, rowCount = row + 1; columnCount >= 0 && rowCount <= ChessBoard.ROWS; columnCount--, rowCount++) {  //查找连续的同色棋子
+                    if (chessBoard.boardStatus[columnCount][rowCount] == color) {
                         chessCount1++;
                     } else {
                         break;
                     }
                 }
-                while (k >= 0 && m <= ChessBoard.ROWS && (chessBoard.boardStatus[k][m] == 0)) { // 统计空位数
+                while (columnCount >= 0 && rowCount <= ChessBoard.ROWS && (chessBoard.boardStatus[columnCount][rowCount] == 0)) { // 统计空位数
                     spaceCountOtherSide2++;
-                    k--;
-                    m++;
+                    columnCount--;
+                    rowCount++;
                 }
                 if (spaceCountOtherSide2 == 1) {
-                    while ((k >= 0) && (m <= ChessBoard.ROWS) && (chessBoard.boardStatus[k][m] == color)) {
+                    while ((columnCount >= 0) && (rowCount <= ChessBoard.ROWS) && (chessBoard.boardStatus[columnCount][rowCount] == color)) {
                         chessCount3++;
-                        k--;
-                        m++;
+                        columnCount--;
+                        rowCount++;
                     }
-                    while ((k >= 0) && (m <= ChessBoard.ROWS) && (chessBoard.boardStatus[k][m] == 0)) {
+                    while ((columnCount >= 0) && (rowCount <= ChessBoard.ROWS) && (chessBoard.boardStatus[columnCount][rowCount] == 0)) {
                         spaceCountOtherSide3++;
-                        k--;
-                        m++;
+                        columnCount--;
+                        rowCount++;
                     }
                 }
-                break;
+            }
         }
         if (chessCount1 + chessCount2 + chessCount3 + spaceCount1 + spaceCountOtherSide1 + spaceCountOtherSide2 + spaceCountOtherSide3 >= 6) {
             //只有同色棋子数加两端的空位数不少于6时，才有价值
+            //将棋的布局放入计算棋型的函数，获取棋型的真实价值
             value = getValue(chessCount1, chessCount2, chessCount3, spaceCount1, spaceCountOtherSide1, spaceCountOtherSide2, spaceCountOtherSide3);
         }
         return value;
@@ -525,7 +527,7 @@ public class Evaluate {
             value += evaluateLine(line, ChessBoard.COLS + 1, 1);
             value -= evaluateLine(line, ChessBoard.COLS + 1, 2);
         }
-        //竖直 对每一列估值
+        //垂直 对每一列估值
         for (int i = 0; i <= ChessBoard.COLS; i++) {
             System.arraycopy(chessBoard.boardStatus[i], 0, line, 0, ChessBoard.ROWS + 1);
             value += evaluateLine(line, ChessBoard.ROWS + 1, 1);
