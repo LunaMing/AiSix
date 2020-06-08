@@ -188,20 +188,20 @@ public class Evaluate {
         int value;
         int[][] valuablePositions = getTheMostValuablePositions();
 
-        for (int i = 0; i < valuablePositions.length; i++) {
-            chessBoard.boardStatus[valuablePositions[i][0]][valuablePositions[i][1]] = chessBoard.computerColor;
+        for (int[] valuablePosition : valuablePositions) {
+            chessBoard.boardStatus[valuablePosition[0]][valuablePosition[1]] = chessBoard.computerColor;
             int oldLeft = chessBoard.left;
             int oldTop = chessBoard.top;
             int oldRight = chessBoard.right;
             int oldBottom = chessBoard.bottom;
-            if (chessBoard.left > valuablePositions[i][0]) chessBoard.left = valuablePositions[i][0];
-            if (chessBoard.top > valuablePositions[i][1]) chessBoard.top = valuablePositions[i][1];
-            if (chessBoard.right < valuablePositions[i][0]) chessBoard.right = valuablePositions[i][0];
-            if (chessBoard.bottom < valuablePositions[i][1]) chessBoard.bottom = valuablePositions[i][1];
+            if (chessBoard.left > valuablePosition[0]) chessBoard.left = valuablePosition[0];
+            if (chessBoard.top > valuablePosition[1]) chessBoard.top = valuablePosition[1];
+            if (chessBoard.right < valuablePosition[0]) chessBoard.right = valuablePosition[0];
+            if (chessBoard.bottom < valuablePosition[1]) chessBoard.bottom = valuablePosition[1];
 
             value = min(depth - 1, alpha, beta);
 
-            chessBoard.boardStatus[valuablePositions[i][0]][valuablePositions[i][1]] = 0;
+            chessBoard.boardStatus[valuablePosition[0]][valuablePosition[1]] = 0;
             chessBoard.left = oldLeft;
             chessBoard.top = oldTop;
             chessBoard.right = oldRight;
@@ -483,25 +483,27 @@ public class Evaluate {
      * @return 价值最大的几个空位（包括位置和估值）
      */
     private int[][] getTheMostValuablePositions() {
+        //所有格子的总数，=行*列
+        int allSquare = (ChessBoard.COLS + 1) * (ChessBoard.ROWS + 1);
         //allValue：保存每一空位的价值(列坐标，行坐标，价值）
-        int[][] allValue = new int[(ChessBoard.COLS + 1) * (ChessBoard.ROWS + 1)][3];
-
-        int k = 0;
+        int[][] allValue = new int[allSquare][3];
+        //格子的索引
+        int square = 0;
+        //遍历所有格子
         for (int i = 0; i < ChessBoard.COLS; i++) {
             for (int j = 0; j < ChessBoard.ROWS; j++) {
                 if (chessBoard.boardStatus[i][j] == 0) {
-                    allValue[k][0] = i;
-                    allValue[k][1] = j;
-                    allValue[k][2] = blackValue[i][j] + whiteValue[i][j] + staticValue[i][j];
-                    k++;
+                    allValue[square][0] = i;
+                    allValue[square][1] = j;
+                    allValue[square][2] = blackValue[i][j] + whiteValue[i][j] + staticValue[i][j];
+                    square++;
                 }
             }
         }
-
         //按价值降序排序
         sort(allValue);
 
-        int size = Math.min(k, SAMPLE_NUMBER);
+        int size = Math.min(square, SAMPLE_NUMBER);
         int[][] valuablePositions = new int[size][3];
 
         //将allValue中的前size个空位赋给bestPositions
