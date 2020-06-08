@@ -8,10 +8,10 @@ import java.awt.RenderingHints;
 import java.awt.geom.Ellipse2D;
 
 public class Chess {
-    public static final int DIAMETER = ChessBoard.SPAN - 2;
-    private int col; //棋子在棋盘中的x索引
-    private int row; //棋子在棋盘中的y索引
-    private Color color;//颜色
+    public static final int DIAMETER = ChessBoard.SPAN - 2;//直径 = 网格间距 - 自定义的间隔大小
+    private final int col; //棋子在棋盘中的x索引
+    private final int row; //棋子在棋盘中的y索引
+    private final Color color;//颜色
     ChessBoard cb;
 
     public Chess(ChessBoard cb, int col, int row, Color color) {
@@ -34,8 +34,8 @@ public class Chess {
     }
 
     public void draw(Graphics g) {
-        int xPos = col * cb.SPAN + cb.MARGIN;
-        int yPos = row * cb.SPAN + cb.MARGIN;
+        int xPos = col * ChessBoard.SPAN + ChessBoard.MARGIN;
+        int yPos = row * ChessBoard.SPAN + ChessBoard.MARGIN;
 
         //Color colorOld = g.getColor();
         //g.setColor(color);//设置颜色
@@ -57,7 +57,7 @@ public class Chess {
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2d.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_DEFAULT);
 
-        Ellipse2D e = new Ellipse2D.Float(xPos - DIAMETER / 2, yPos - DIAMETER / 2, DIAMETER, DIAMETER);
+        Ellipse2D e = new Ellipse2D.Float(xPos - (float) DIAMETER / 2, yPos - (float) DIAMETER / 2, DIAMETER, DIAMETER);
         g2d.fill(e);
         //g.setColor(colorOld);
     }
