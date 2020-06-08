@@ -288,7 +288,6 @@ public class Evaluate {
                         k++;
                     }
                 }
-
                 //向相反方向查找相同颜色连续的棋子
                 for (k = colomn - 1; k >= 0; k--) {
                     if (chessBoard.boardStatus[k][row] == color) {
@@ -313,7 +312,8 @@ public class Evaluate {
                     }
                 }
                 break;
-            case 2:  //  垂直方向
+            case 2:
+                //垂直方向
                 //向增加的方向查找相同颜色连续的棋子
                 for (k = row + 1; k <= ChessBoard.ROWS; k++) {
                     if (chessBoard.boardStatus[colomn][k] == color) {
@@ -337,7 +337,6 @@ public class Evaluate {
                         k++;
                     }
                 }
-
                 //向相反方向查找相同颜色连续的棋子
                 for (k = row - 1; k >= 0; k--) {
                     if (chessBoard.boardStatus[colomn][k] == color) {
@@ -362,7 +361,8 @@ public class Evaluate {
                     }
                 }
                 break;
-            case 3:  //  左上到右下
+            case 3:
+                //左上到右下
                 //向增加的方向查找相同颜色连续的棋子
                 for (k = colomn + 1, m = row + 1; (k <= ChessBoard.COLS) && (m <= ChessBoard.ROWS); k++, m++) {
                     if (chessBoard.boardStatus[k][m] == color) {
@@ -389,7 +389,6 @@ public class Evaluate {
                         m++;
                     }
                 }
-
                 //向相反方向查找相同颜色连续的棋子
                 for (k = colomn - 1, m = row - 1; (k >= 0) && (m >= 0); k--, m--) {
                     if (chessBoard.boardStatus[k][m] == color) {
@@ -417,8 +416,8 @@ public class Evaluate {
                     }
                 }
                 break;
-
-            case 4:  //  右上到左下
+            case 4:
+                //右上到左下
                 for (k = colomn + 1, m = row - 1; k <= ChessBoard.COLS && m >= 0; k++, m--) {  //查找连续的同色棋子
                     if (chessBoard.boardStatus[k][m] == color) {
                         chessCount1++;
@@ -443,7 +442,6 @@ public class Evaluate {
                         m--;
                     }
                 }
-
                 for (k = colomn - 1, m = row + 1; k >= 0 && m <= ChessBoard.ROWS; k--, m++) {  //查找连续的同色棋子
                     if (chessBoard.boardStatus[k][m] == color) {
                         chessCount1++;
@@ -483,11 +481,12 @@ public class Evaluate {
      * @return 价值最大的几个空位（包括位置和估值）
      */
     private int[][] getTheMostValuablePositions() {
-        int i, j, k = 0;
         //allValue：保存每一空位的价值(列坐标，行坐标，价值）
         int[][] allValue = new int[(ChessBoard.COLS + 1) * (ChessBoard.ROWS + 1)][3];
-        for (i = 0; i < ChessBoard.COLS; i++) {
-            for (j = 0; j < ChessBoard.ROWS; j++) {
+
+        int k = 0;
+        for (int i = 0; i < ChessBoard.COLS; i++) {
+            for (int j = 0; j < ChessBoard.ROWS; j++) {
                 if (chessBoard.boardStatus[i][j] == 0) {
                     allValue[k][0] = i;
                     allValue[k][1] = j;
@@ -496,13 +495,15 @@ public class Evaluate {
                 }
             }
         }
-        sort(allValue);   //按价值降序排序
+
+        //按价值降序排序
+        sort(allValue);
 
         int size = Math.min(k, SAMPLE_NUMBER);
         int[][] valuablePositions = new int[size][3];
 
         //将allValue中的前size个空位赋给bestPositions
-        for (i = 0; i < size; i++) {
+        for (int i = 0; i < size; i++) {
             valuablePositions[i][0] = allValue[i][0];
             valuablePositions[i][1] = allValue[i][1];
             valuablePositions[i][2] = allValue[i][2];
@@ -526,9 +527,7 @@ public class Evaluate {
         }
         //竖直 对每一列估值
         for (int i = 0; i <= ChessBoard.COLS; i++) {
-            for (int j = 0; j <= ChessBoard.ROWS; j++) {
-                line[j] = chessBoard.boardStatus[i][j];
-            }
+            System.arraycopy(chessBoard.boardStatus[i], 0, line, 0, ChessBoard.ROWS + 1);
             value += evaluateLine(line, ChessBoard.ROWS + 1, 1);
             value -= evaluateLine(line, ChessBoard.ROWS + 1, 2);
         }
