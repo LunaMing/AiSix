@@ -9,21 +9,20 @@ import javax.swing.border.EtchedBorder;
 
 
 public class Six extends JFrame {
-    private JPanel toolbar;
-    private JButton startButton, backButton, exitButton;
-    private ChessBoard boardPanel;
+    private final JButton startButton;
+    private final JButton backButton;
+    private final JButton exitButton;
+    private final ChessBoard boardPanel;
     JCheckBox computerFirst;
-    private JLabel statusbar;
-
-    private JLabel name = new JLabel(("By 徐雯、刘月明、杨可"));
+    private final JLabel statusbar;
 
     public Six() {
         super("六子棋人机对战");
-        toolbar = new JPanel();
+        JPanel toolbar = new JPanel();
         startButton = new JButton("重新开始");
         backButton = new JButton("悔棋");
         exitButton = new JButton("退出");
-        computerFirst = new JCheckBox("电脑先手");
+        computerFirst = new JCheckBox("AI先手");
         toolbar.add(startButton);
         toolbar.add(backButton);
         toolbar.add(exitButton);
@@ -34,7 +33,8 @@ public class Six extends JFrame {
         statusbar.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED));
         this.add(statusbar, BorderLayout.SOUTH);
 
-        this.add(name, BorderLayout.SOUTH);
+        JLabel authorName = new JLabel(("By 徐雯、刘月明、杨可"));
+        this.add(authorName, BorderLayout.SOUTH);
 
         boardPanel = new ChessBoard(this);
         this.add(boardPanel, BorderLayout.CENTER);
@@ -51,8 +51,8 @@ public class Six extends JFrame {
         this.setDefaultCloseOperation(EXIT_ON_CLOSE);
         this.setVisible(true);
 
-        String msg = String.format("【游戏规则】\n第一次黑方下一颗子，之后黑白双方轮流每次各下两子\n\n★注意★\n首次开局请点击「重新开始」\n\n祝您游戏愉快！\\ ( >O< ) / \n\nAI课设");
-        JOptionPane.showMessageDialog(Six.this, msg);
+        String msg = "【游戏规则】\n第一次黑方下一颗子，之后黑白双方轮流每次各下两子\n\n祝您游戏愉快！";
+        JOptionPane.showMessageDialog(Six.this, msg, "游戏规则", JOptionPane.INFORMATION_MESSAGE);
     }
 
     public static void main(String[] args) {

@@ -10,6 +10,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.net.URL;
+import java.util.Arrays;
 
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -19,16 +20,16 @@ public class ChessBoard extends JPanel {
     public static final int SPAN = 25;//网格间距
     public static final int ROWS = 18;//棋盘行数
     public static final int COLS = 18;//棋盘列数
-    private Image img;
+    private final Image img;
 
     Chess[] chessList = new Chess[(ROWS + 1) * (COLS + 1)];//初始每个数组元素为null
     int chessCount = 0;//当前棋盘棋子的个数
 
     private boolean isGamming = false;    //是否正在游戏
-    int computerColor;                    //计算机棋子颜色    1：黑棋  2：白棋
-    boolean isComputerGo;         //计算机先行？
-    boolean isBlack;                    //下一步棋是否该黑棋下子
-    private Six f;
+    int computerColor;                   //计算机棋子颜色    1：黑棋  2：白棋
+    boolean isComputerGo;               //计算机先行？
+    boolean isBlack;                   //下一步棋是否该黑棋下子
+    private final Six six;
 
     int[][] boardStatus;
 
@@ -37,8 +38,8 @@ public class ChessBoard extends JPanel {
     int right;
     int bottom;
 
-    public ChessBoard(Six f) {
-        this.f = f;
+    public ChessBoard(Six six) {
+        this.six = six;
         boardStatus = new int[COLS + 1][ROWS + 1];
         for (int i = 0; i <= COLS; i++) {
             for (int j = 0; j <= ROWS; j++) {
@@ -182,10 +183,7 @@ public class ChessBoard extends JPanel {
                 continueCount++;
             else break;
         }
-        if (continueCount >= 6)
-            return true;
-        else
-            return false;
+        return continueCount >= 6;
     }
 
     class MouseMonitor extends MouseAdapter {
@@ -205,9 +203,10 @@ public class ChessBoard extends JPanel {
             if (hasChess(col, row)) return;
 
             manGo(col, row);
-            if (!isGamming) return;
+            if (!isGamming)
+                return;
 
-            if (isComputerGo && isGamming) {
+            if (isComputerGo) {
                 computerGo();
             }
 
@@ -228,9 +227,7 @@ public class ChessBoard extends JPanel {
 
     public void restartGame() {
         //清除棋子
-        for (int i = 0; i < chessList.length; i++) {
-            chessList[i] = null;
-        }
+        Arrays.fill(chessList, null);
         for (int i = 0; i <= COLS; i++) {
             for (int j = 0; j <= ROWS; j++) {
                 boardStatus[i][j] = 0;
@@ -243,14 +240,14 @@ public class ChessBoard extends JPanel {
         //恢复游戏相关的变量值
         isBlack = true;          //是否该黑方下棋
         isGamming = true;     //是否正在游戏
-        isComputerGo = f.computerFirst.isSelected();  // 选中复选框，计算机先行
+        isComputerGo = six.computerFirst.isSelected();  // 选中复选框，计算机先行
         computerColor = isComputerGo ? 1 : 2;              //如果计算机先行，则执黑棋
         chessCount = 0; //当前棋盘棋子个数
 
         if (isComputerGo) {
             computerGo();   // 如果计算机先行，计算机先下一子
         }
-        f.refreshStatus();
+        six.refreshStatus();
 
         paintComponent(this.getGraphics());
     }
@@ -262,7 +259,7 @@ public class ChessBoard extends JPanel {
         //JOptionPane.showMessageDialog(aiSix.ChessBoard.this, msg);
 
         Evaluate e = new Evaluate(this);
-        int pos[] = e.getTheBestPosition();
+        int[] pos = e.getTheBestPosition();
         putChess(pos[0], pos[1], isBlack ? Color.black : Color.white);
         if (isComputerGo && isGamming)
             computerGo();
@@ -271,7 +268,7 @@ public class ChessBoard extends JPanel {
     public void manGo(int col, int row) {
         putChess(col, row, isBlack ? Color.black : Color.white);
         if (isComputerGo && isGamming) {
-            f.refreshStatus();
+            six.refreshStatus();
         }
     }
 
@@ -288,12 +285,12 @@ public class ChessBoard extends JPanel {
 
         //如果胜出则给出提示信息，不能继续下棋
         if (isWin(col, row)) {
-            f.displayGameover();
+            six.displayGameover();
             String msg;
             if (!isComputerGo) {
-                msg = String.format("好厉害，你赢了！（⊙o⊙）");
+                msg = "你赢了！";
             } else {
-                msg = String.format("呃，你输了〒_〒");
+                msg = "你输了。";
             }
             JOptionPane.showMessageDialog(ChessBoard.this, msg);
             isGamming = false;
