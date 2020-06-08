@@ -282,7 +282,6 @@ public class ChessBoard extends JPanel {
         paintComponent(this.getGraphics());
 
         if (left > col) left = col;
-        ;
         if (top > row) top = row;
         if (right < col) right = col;
         if (bottom < row) bottom = row;
