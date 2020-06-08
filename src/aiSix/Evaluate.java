@@ -13,9 +13,9 @@ public class Evaluate {
     private static final int HUO_TWO = 100;
     private static final int MIAN_TWO = 50;
 
-    private static final int LARGE_NUMBER = 10000000;
+    private static final int INFINITY = 10000000;
     private static final int SEARCH_DEPTH = 5;
-    private static final int SAMPLE_NUMBER = 10;
+    private static final int MY_REAL_VALUABLE_POSITION_NUM = 10;
 
 
     private final ChessBoard chessBoard;
@@ -93,7 +93,7 @@ public class Evaluate {
         //获取空位的价值
         getTheSpaceValues();
 
-        int maxValue = -LARGE_NUMBER;
+        int maxValue = -INFINITY;
         int value;
         int[] position = new int[2];
 
@@ -117,7 +117,7 @@ public class Evaluate {
             if (chessBoard.right < valuablePosition[0]) chessBoard.right = valuablePosition[0];
             if (chessBoard.bottom < valuablePosition[1]) chessBoard.bottom = valuablePosition[1];
 
-            value = min(SEARCH_DEPTH, -LARGE_NUMBER, LARGE_NUMBER);
+            value = min(SEARCH_DEPTH, -INFINITY, INFINITY);
 
             chessBoard.boardStatus[valuablePosition[0]][valuablePosition[1]] = 0;
             chessBoard.left = oldLeft;
@@ -484,31 +484,36 @@ public class Evaluate {
      * @return 价值最大的几个空位（包括位置和估值）
      */
     private int[][] getTheMostValuablePositions() {
-        //所有格子的总数，=行*列
-        int allSquare = (ChessBoard.COLS + 1) * (ChessBoard.ROWS + 1);
-        //allValue：保存每一空位的价值(列坐标，行坐标，价值）
-        int[][] allValue = new int[allSquare][3];
+        //所有格子的总数 = 行 * 列
+        int allSquareNum = (ChessBoard.COLS + 1) * (ChessBoard.ROWS + 1);
+        //保存每一格子的价值
+        //外层索引是格子数，里面一层的三个分别存的是：列坐标，行坐标，价值
+        //例如：allValue[0] = {column, row, value};
+        int[][] allValue = new int[allSquareNum][3];
         //格子的索引
-        int square = 0;
+        int squareIndex = 0;
         //遍历所有格子
         for (int i = 0; i < ChessBoard.COLS; i++) {
             for (int j = 0; j < ChessBoard.ROWS; j++) {
                 if (chessBoard.boardStatus[i][j] == 0) {
-                    allValue[square][0] = i;
-                    allValue[square][1] = j;
-                    allValue[square][2] = blackValue[i][j] + whiteValue[i][j] + staticValue[i][j];
-                    square++;
+                    allValue[squareIndex][0] = i;
+                    allValue[squareIndex][1] = j;
+                    //价值 = 黑 + 白 + 静态位置
+                    allValue[squareIndex][2] = blackValue[i][j] + whiteValue[i][j] + staticValue[i][j];
+                    squareIndex++;
                 }
             }
         }
+
         //按价值降序排序
         sort(allValue);
 
-        int size = Math.min(square, SAMPLE_NUMBER);
-        int[][] valuablePositions = new int[size][3];
-
-        //将allValue中的前size个空位赋给bestPositions
-        for (int i = 0; i < size; i++) {
+        //需要进行评估的可选点数量
+        //从“格子总数”和“自定义的可选点数量”里面取最小值，就是实际用的可选点数量
+        int realValuablePositionNum = Math.min(allSquareNum, MY_REAL_VALUABLE_POSITION_NUM);
+        int[][] valuablePositions = new int[realValuablePositionNum][3];
+        //按照自定义的选择数量，将有价值的点复制给可选点
+        for (int i = 0; i < realValuablePositionNum; i++) {
             valuablePositions[i][0] = allValue[i][0];
             valuablePositions[i][1] = allValue[i][1];
             valuablePositions[i][2] = allValue[i][2];
