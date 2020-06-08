@@ -1,7 +1,6 @@
 package aiSix;
 
 
-
 public class Evaluate {
     private static final int SIX = 500000;
     private static final int HUO_FIVE = 50000;
@@ -24,6 +23,10 @@ public class Evaluate {
     private int[][] whiteValue;   // 保存每一空位下白子的价值
     private int[][] staticValue;  // 保存每一点的位置价值，越靠中心，价值越大
 
+    /**
+     * 构造函数
+     * 对黑白价值、静态价值数组进行初始化
+     */
     public Evaluate(ChessBoard chessBoard) {
         this.chessBoard = chessBoard;
 
@@ -31,6 +34,8 @@ public class Evaluate {
         whiteValue = new int[ChessBoard.COLS + 1][ChessBoard.ROWS + 1];
         staticValue = new int[ChessBoard.COLS + 1][ChessBoard.ROWS + 1];
 
+        //黑白价值
+        //初始都是0
         for (int i = 0; i <= ChessBoard.COLS; i++) {
             for (int j = 0; j <= ChessBoard.ROWS; j++) {
                 blackValue[i][j] = 0;
@@ -38,26 +43,29 @@ public class Evaluate {
             }
         }
 
+        //静态价值
         //对每一点的价值进行初始化，越靠中心价值越大
         for (int i = 0; i <= ChessBoard.COLS / 2; i++) {
             for (int j = 0; j <= ChessBoard.ROWS / 2; j++) {
-                staticValue[i][j] = Math.min(i, j);
-                staticValue[ChessBoard.COLS - i][j] = staticValue[i][j];
+                staticValue[i][j] = Math.min(i, j);//第一象限内，价值就是行列坐标只
+                staticValue[ChessBoard.COLS - i][j] = staticValue[i][j];//对称
                 staticValue[i][ChessBoard.ROWS - j] = staticValue[i][j];
                 staticValue[ChessBoard.COLS - i][ChessBoard.ROWS - j] = staticValue[i][j];
             }
         }
     }
 
-    //扩大左右，对每个空的点进行估值，每个点的分值为四个方向分值之和
+    /**
+     * 扩大左右，对每个空的点进行估值，每个点的分值为四个方向分值之和
+     */
     private void getTheSpaceValues() {
-        int l, t, r, b;
-        l = (chessBoard.left > 2) ? chessBoard.left - 2 : 0;
-        t = (chessBoard.top > 2) ? chessBoard.top - 2 : 0;
-        r = (chessBoard.right < ChessBoard.COLS - 1) ? chessBoard.right + 2 : ChessBoard.COLS;
-        b = (chessBoard.bottom < ChessBoard.ROWS - 1) ? chessBoard.bottom + 2 : ChessBoard.ROWS;
-        for (int i = l; i <= r; i++) {
-            for (int j = t; j <= b; j++) {//对棋盘的所有点循环
+        int left, top, right, bottom;
+        left = (chessBoard.left > 2) ? chessBoard.left - 2 : 0;
+        top = (chessBoard.top > 2) ? chessBoard.top - 2 : 0;
+        right = (chessBoard.right < ChessBoard.COLS - 1) ? chessBoard.right + 2 : ChessBoard.COLS;
+        bottom = (chessBoard.bottom < ChessBoard.ROWS - 1) ? chessBoard.bottom + 2 : ChessBoard.ROWS;
+        for (int i = left; i <= right; i++) {
+            for (int j = top; j <= bottom; j++) {//对棋盘的所有点循环
                 blackValue[i][j] = 0;
                 whiteValue[i][j] = 0;
                 if (chessBoard.boardStatus[i][j] == 0) {  //如果是空位，进行估值
