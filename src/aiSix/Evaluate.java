@@ -2,6 +2,8 @@ package aiSix;
 
 
 public class Evaluate {
+    /*---------------------棋型价值-----------------------*/
+    //将六子棋棋型分为连六、活五、眠五、活四、眠四、活三、朦胧三、眠三、活二、眠二
     private static final int SIX = 500000;
     private static final int HUO_FIVE = 50000;
     private static final int MIAN_FIVE = 10000;
@@ -13,12 +15,11 @@ public class Evaluate {
     private static final int HUO_TWO = 100;
     private static final int MIAN_TWO = 50;
 
-    private static final int INFINITY = 10000000;
-    private static final int SEARCH_DEPTH = 5;
-    private static final int MY_REAL_VALUABLE_POSITION_NUM = 10;
+    private static final int INFINITY = 10000000;//无穷大
+    private static final int SEARCH_DEPTH = 5;//搜索深度
+    private static final int MY_REAL_VALUABLE_POSITION_NUM = 10;//可选点的最多搜索数量
 
-
-    private final ChessBoard chessBoard;
+    private final ChessBoard chessBoard;// 输入的棋盘布局
     private final int[][] blackValue;   // 保存每一空位下黑子的价值
     private final int[][] whiteValue;   // 保存每一空位下白子的价值
     private final int[][] staticValue;  // 保存每一点的位置价值，越靠中心，价值越大
@@ -26,6 +27,8 @@ public class Evaluate {
     /**
      * 构造函数
      * 对黑白价值、静态价值数组进行初始化
+     *
+     * @param chessBoard 当前布局
      */
     public Evaluate(ChessBoard chessBoard) {
         //当前布局
@@ -56,12 +59,11 @@ public class Evaluate {
         }
     }
 
-
     /**
      * 获取计算机的最佳下棋位置
      * 评估函数的入口
      *
-     * @return 最佳位置的坐标
+     * @return 最佳位置的坐标，先x后y
      */
     int[] getTheBestPosition() {
         int maxValue = -INFINITY;
@@ -108,8 +110,10 @@ public class Evaluate {
     }
 
     /**
-     * @param depth：搜索的深度
-     * @return //todo
+     * Alpha-Beta算法的min
+     *
+     * @param depth 搜索的深度
+     * @return 最优价值
      */
     private int min(int depth, int alpha, int beta) {
         if (depth == 0) {
@@ -151,8 +155,10 @@ public class Evaluate {
     }
 
     /**
-     * @param depth：搜索的深度
-     * @return //todo
+     * Alpha-Beta算法的min
+     *
+     * @param depth 搜索的深度
+     * @return 最优价值
      */
     private int max(int depth, int alpha, int beta) {
         if (depth == 0) {
@@ -193,9 +199,8 @@ public class Evaluate {
         return alpha;
     }
 
-
     /**
-     * 静态评估
+     * Alpha-Beta的静态评估
      */
     private int evaluateGame() {
         int value = 0;
@@ -254,7 +259,12 @@ public class Evaluate {
     }
 
     /**
-     * 一行的连珠数数
+     * 计算一行的连珠数，调用棋型，计算价值
+     *
+     * @param lineState 一行上的棋子
+     * @param num       这一行棋子数量
+     * @param color     要计算的是哪一方的价值，1：黑方，2：白方
+     * @return 这一行的最终价值
      */
     private int evaluateLine(int[] lineState, int num, int color) {
         int chess, space1, space2;
@@ -294,7 +304,7 @@ public class Evaluate {
     }
 
     /**
-     * 根据棋型，计算该点下一个棋子的价值
+     * 根据棋型返回价值
      * 看两层，也就是防止 AAOA 的情况
      *
      * @param chessCount1          该空位置下一个棋子后同种颜色棋子连续的个数 A后边连续的A个数
@@ -380,12 +390,13 @@ public class Evaluate {
         return value;
     }
 
-    /*----------------------------产生可选点------------------------------*/
+    /*----------------------------排序选出可选点------------------------------*/
 
     /**
-     * 查找棋盘上价值最大的几个空位，每个空位的价值等于两种棋的价值之和。
+     * 查找可选点
+     * 每个空位的价值等于黑白棋的价值加上位置本身的价值
      *
-     * @return 价值最大的几个空位（包括位置和估值）
+     * @return 价值最大的几个可选点，数组前面一层是[格子序号]，后面是{列坐标，行坐标，价值}
      */
     private int[][] getTheMostValuablePositions() {
         //所有格子的总数 = 行 * 列
@@ -426,9 +437,10 @@ public class Evaluate {
     }
 
     /**
-     * 对数组按第三列（allValue[][2]降序排序）
+     * 对可选点按照价值排序
+     * 也就是对数组按第三列（allValue[][2]降序排序）
      *
-     * @param allValue: 待排序的数组，二维数组的前两列是棋盘位置坐标，第3列是该位置的价值
+     * @param allValue 待排序的数组，数组前面一层是[格子序号]，后面是{列坐标，行坐标，价值}
      */
     private void sort(int[][] allValue) {
         for (int i = 0; i < allValue.length; i++) {
@@ -458,7 +470,7 @@ public class Evaluate {
     /**
      * 更新每格的黑白价值
      * 按照当前局面，给每个格子的黑白价值进行更新，每个点的分值为四个方向分值之和。
-     * 调用了评估棋型，里面是用数连珠的方法
+     * 调用了评估棋型，里面是还用数连珠数量，计算棋型价值的方法
      */
     private void updateBlackAndWhiteValue() {
         int left, top, right, bottom;
@@ -488,13 +500,14 @@ public class Evaluate {
     }
 
     /**
-     * 计算棋盘上指定空位在指定方向价值
+     * 计算棋盘上可选点的价值
+     * 包括颜色，坐标，方向
      *
      * @param color     要计算的是哪一方的价值，1：黑方，2：白方
      * @param colomn    要计算位置的列坐标
      * @param row       要计算位置的行坐标
      * @param direction 要计算方向，1：水平，2：垂直，3：左上到右下，4：右上到左下
-     * @return 价值
+     * @return 可选点的限定价值
      */
     private int evaluateValue(int color, int colomn, int row, int direction) {
         int columnCount, rowCount;
@@ -726,8 +739,7 @@ public class Evaluate {
 
     /**
      * 获取不同棋型的价值
-     * 只看一层
-     * 将六子棋棋型分为连六、活五、眠五、活四、眠四、活三、朦胧三、眠三、活二、眠二
+     * 只看一层，快速看
      *
      * @param chessCount          该空位置下一个棋子后同种颜色棋子连续的个数 AAA
      * @param spaceCount          连续棋子一端的连续空位数 AOOOO
@@ -736,7 +748,7 @@ public class Evaluate {
      */
     private int getValueByThree(int chessCount, int spaceCount, int spaceCountOtherSide) {
         int value = 0;
-        //将六子棋棋型分为连六、活五、眠五、活四、眠四、活三、朦胧三、眠三、活二、眠二
+        //六子棋棋型
         switch (chessCount) {
             case 6:
                 //如果已经可以连成6子，则赢棋

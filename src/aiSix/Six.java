@@ -10,7 +10,6 @@ import javax.swing.border.EtchedBorder;
 
 public class Six extends JFrame {
     private final JButton startButton;
-    private final JButton backButton;
     private final JButton exitButton;
     private final ChessBoard boardPanel;
     JCheckBox computerFirst;
@@ -20,16 +19,14 @@ public class Six extends JFrame {
         super("六子棋人机对战");
         JPanel toolbar = new JPanel();
         startButton = new JButton("开始");
-        backButton = new JButton("悔棋");
         exitButton = new JButton("退出");
         computerFirst = new JCheckBox("AI先手");
         toolbar.add(startButton);
-        toolbar.add(backButton);
         toolbar.add(exitButton);
         toolbar.add(computerFirst);
         this.add(toolbar, BorderLayout.NORTH);
 
-        statusbar = new JLabel("请点击「重新开始」");
+        statusbar = new JLabel("请点击「开始」重新开始");
         statusbar.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED));
         this.add(statusbar, BorderLayout.SOUTH);
 
@@ -41,7 +38,6 @@ public class Six extends JFrame {
 
         ActionMonitor monitor = new ActionMonitor();
         startButton.addActionListener(monitor);
-        backButton.addActionListener(monitor);
         exitButton.addActionListener(monitor);
 
         this.setLocation(200, 200);
@@ -72,8 +68,6 @@ public class Six extends JFrame {
             if (e.getSource() == startButton) {
                 boardPanel.restartGame();
 
-            } else if (e.getSource() == backButton) {
-                boardPanel.goback();
             } else if (e.getSource() == exitButton) {
                 System.exit(0);
             }
