@@ -19,7 +19,7 @@ public class Six extends JFrame {
     public Six() {
         super("六子棋人机对战");
         JPanel toolbar = new JPanel();
-        startButton = new JButton("重新开始");
+        startButton = new JButton("开始");
         backButton = new JButton("悔棋");
         exitButton = new JButton("退出");
         computerFirst = new JCheckBox("AI先手");
