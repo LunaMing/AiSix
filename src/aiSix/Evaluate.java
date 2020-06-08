@@ -99,26 +99,27 @@ public class Evaluate {
 
         int[][] valuablePositions = getTheMostValuablePositions();
 
-        for (int i = 0; i < valuablePositions.length; i++) {
-            if (valuablePositions[i][2] >= SIX) {
+        for (int[] valuablePosition : valuablePositions) {
+            if (valuablePosition[2] >= SIX) {
                 //已经连六
-                position[0] = valuablePositions[i][0];
-                position[1] = valuablePositions[i][1];
+                position[0] = valuablePosition[0];
+                position[1] = valuablePosition[1];
                 break;
             }
-            chessBoard.boardStatus[valuablePositions[i][0]][valuablePositions[i][1]] = chessBoard.computerColor;
-            int oldLeft = chessBoard.left; //改变LEFT、TOP等值
-            int oldTop = chessBoard.top; //改变LEFT、TOP等值
-            int oldRight = chessBoard.right; //改变LEFT、TOP等值
-            int oldBottom = chessBoard.bottom; //改变LEFT、TOP等值
-            if (chessBoard.left > valuablePositions[i][0]) chessBoard.left = valuablePositions[i][0];
-            if (chessBoard.top > valuablePositions[i][1]) chessBoard.top = valuablePositions[i][1];
-            if (chessBoard.right < valuablePositions[i][0]) chessBoard.right = valuablePositions[i][0];
-            if (chessBoard.bottom < valuablePositions[i][1]) chessBoard.bottom = valuablePositions[i][1];
+            chessBoard.boardStatus[valuablePosition[0]][valuablePosition[1]] = chessBoard.computerColor;
+            //改变LEFT、TOP等值
+            int oldLeft = chessBoard.left;
+            int oldTop = chessBoard.top;
+            int oldRight = chessBoard.right;
+            int oldBottom = chessBoard.bottom;
+            if (chessBoard.left > valuablePosition[0]) chessBoard.left = valuablePosition[0];
+            if (chessBoard.top > valuablePosition[1]) chessBoard.top = valuablePosition[1];
+            if (chessBoard.right < valuablePosition[0]) chessBoard.right = valuablePosition[0];
+            if (chessBoard.bottom < valuablePosition[1]) chessBoard.bottom = valuablePosition[1];
 
             value = min(SEARCH_DEPTH, -LARGE_NUMBER, LARGE_NUMBER);
 
-            chessBoard.boardStatus[valuablePositions[i][0]][valuablePositions[i][1]] = 0;
+            chessBoard.boardStatus[valuablePosition[0]][valuablePosition[1]] = 0;
             chessBoard.left = oldLeft;
             chessBoard.top = oldTop;
             chessBoard.right = oldRight;
@@ -126,8 +127,8 @@ public class Evaluate {
 
             if (value > maxValue) {
                 maxValue = value;
-                position[0] = valuablePositions[i][0];
-                position[1] = valuablePositions[i][1];
+                position[0] = valuablePosition[0];
+                position[1] = valuablePosition[1];
             }
         }
         return position;
@@ -524,7 +525,8 @@ public class Evaluate {
         //水平  对每一行估值
         for (int j = 0; j <= ChessBoard.ROWS; j++) {
             for (int i = 0; i <= ChessBoard.COLS; i++) {
-                line[i] = chessBoard.boardStatus[i][j];   //第一个下标是列下标
+                //第一个下标是列下标
+                line[i] = chessBoard.boardStatus[i][j];
             }
             value += evaluateLine(line, ChessBoard.COLS + 1, 1);
             value -= evaluateLine(line, ChessBoard.COLS + 1, 2);
