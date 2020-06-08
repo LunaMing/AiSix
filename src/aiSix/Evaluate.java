@@ -55,33 +55,6 @@ public class Evaluate {
         }
     }
 
-    /**
-     * 获取空位价值
-     * 扩大左右，对每个空的点进行估值，每个点的分值为四个方向分值之和。
-     */
-    private void getTheSpaceValues() {
-        int left, top, right, bottom;
-        //todo
-        left = (chessBoard.left > 2) ? chessBoard.left - 2 : 0;
-        top = (chessBoard.top > 2) ? chessBoard.top - 2 : 0;
-        right = (chessBoard.right < ChessBoard.COLS - 1) ? chessBoard.right + 2 : ChessBoard.COLS;
-        bottom = (chessBoard.bottom < ChessBoard.ROWS - 1) ? chessBoard.bottom + 2 : ChessBoard.ROWS;
-        for (int i = left; i <= right; i++) {
-            for (int j = top; j <= bottom; j++) {
-                //对棋盘的所有点循环
-                blackValue[i][j] = 0;
-                whiteValue[i][j] = 0;
-                if (chessBoard.boardStatus[i][j] == 0) {
-                    //如果是空位，进行估值
-                    for (int m = 1; m <= 4; m++) {
-                        //每个点的分值为四个方向分值之和
-                        blackValue[i][j] += evaluateValue(1, i, j, m);
-                        whiteValue[i][j] += evaluateValue(2, i, j, m);
-                    }
-                }
-            }
-        }
-    }
 
     /**
      * 获取计算机的最佳下棋位置
@@ -240,6 +213,175 @@ public class Evaluate {
                     allValue[j][1] = allValue[j + 1][1];
                     allValue[j + 1][1] = tj;
 
+                }
+            }
+        }
+    }
+
+
+
+    /**
+     * 查找棋盘上价值最大的几个空位，每个空位的价值等于两种棋的价值之和。
+     *
+     * @return 价值最大的几个空位（包括位置和估值）
+     */
+    private int[][] getTheMostValuablePositions() {
+        //所有格子的总数 = 行 * 列
+        int allSquareNum = (ChessBoard.COLS + 1) * (ChessBoard.ROWS + 1);
+        //保存每一格子的价值
+        //外层索引是格子数，里面一层的三个分别存的是：列坐标，行坐标，价值
+        //例如：allValue[0] = {column, row, value};
+        int[][] allValue = new int[allSquareNum][3];
+        //格子的索引
+        int squareIndex = 0;
+        //遍历所有格子
+        for (int i = 0; i < ChessBoard.COLS; i++) {
+            for (int j = 0; j < ChessBoard.ROWS; j++) {
+                if (chessBoard.boardStatus[i][j] == 0) {
+                    allValue[squareIndex][0] = i;
+                    allValue[squareIndex][1] = j;
+                    //价值 = 黑 + 白 + 静态位置
+                    allValue[squareIndex][2] = blackValue[i][j] + whiteValue[i][j] + staticValue[i][j];
+                    squareIndex++;
+                }
+            }
+        }
+
+        //按价值降序排序
+        sort(allValue);
+
+        //需要进行评估的可选点数量
+        //从“格子总数”和“自定义的可选点数量”里面取最小值，就是实际用的可选点数量
+        int realValuablePositionNum = Math.min(allSquareNum, MY_REAL_VALUABLE_POSITION_NUM);
+        int[][] valuablePositions = new int[realValuablePositionNum][3];
+        //按照自定义的选择数量，将有价值的点复制给可选点
+        for (int i = 0; i < realValuablePositionNum; i++) {
+            valuablePositions[i][0] = allValue[i][0];
+            valuablePositions[i][1] = allValue[i][1];
+            valuablePositions[i][2] = allValue[i][2];
+        }
+        return valuablePositions;
+    }
+
+    /**
+     * 静态评估
+     */
+    private int evaluateGame() {
+        int value = 0;
+        int[] line = new int[ChessBoard.COLS + 1];
+        //水平  对每一行估值
+        for (int j = 0; j <= ChessBoard.ROWS; j++) {
+            for (int i = 0; i <= ChessBoard.COLS; i++) {
+                //第一个下标是列下标
+                line[i] = chessBoard.boardStatus[i][j];
+            }
+            value += evaluateLine(line, ChessBoard.COLS + 1, 1);
+            value -= evaluateLine(line, ChessBoard.COLS + 1, 2);
+        }
+        //垂直 对每一列估值
+        for (int i = 0; i <= ChessBoard.COLS; i++) {
+            System.arraycopy(chessBoard.boardStatus[i], 0, line, 0, ChessBoard.ROWS + 1);
+            value += evaluateLine(line, ChessBoard.ROWS + 1, 1);
+            value -= evaluateLine(line, ChessBoard.ROWS + 1, 2);
+        }
+        // 左下到右上斜线估值
+        for (int j = 4; j <= ChessBoard.ROWS; j++) {
+            for (int k = 0; k <= j; k++) {
+                line[k] = chessBoard.boardStatus[k][j - k];
+            }
+            value += evaluateLine(line, j + 1, 1);
+            value -= evaluateLine(line, j + 1, 2);
+        }
+        for (int j = 1; j <= ChessBoard.ROWS - 4; j++) {
+            for (int k = 0; k <= ChessBoard.COLS - j; k++) {
+                line[k] = chessBoard.boardStatus[k + j][ChessBoard.ROWS - k];
+            }
+            value += evaluateLine(line, ChessBoard.ROWS + 1 - j, 1);
+            value -= evaluateLine(line, ChessBoard.ROWS + 1 - j, 2);
+        }
+        // 左上到右下斜线估值
+        for (int j = 0; j <= ChessBoard.ROWS - 4; j++) {
+            for (int k = 0; k <= ChessBoard.ROWS - j; k++) {
+                line[k] = chessBoard.boardStatus[k][k + j];
+            }
+            value += evaluateLine(line, ChessBoard.ROWS + 1 - j, 1);
+            value -= evaluateLine(line, ChessBoard.ROWS + 1 - j, 2);
+        }
+        for (int i = 1; i <= ChessBoard.COLS - 4; i++) {
+            for (int k = 0; k <= ChessBoard.ROWS - i; k++) {
+                line[k] = chessBoard.boardStatus[k + i][k];
+            }
+            value += evaluateLine(line, ChessBoard.ROWS + 1 - i, 1);
+            value -= evaluateLine(line, ChessBoard.ROWS + 1 - i, 2);
+        }
+        if (chessBoard.computerColor == 1) {
+            return value;
+        } else {
+            //另一方是负值
+            return -value;
+        }
+    }
+
+    private int evaluateLine(int[] lineState, int num, int color) {
+        int chess, space1, space2;
+        int value = 0;
+        int begin, end;
+        for (int i = 0; i < num; i++)
+            if (lineState[i] == color) {
+                //遇到要找的棋子，检查棋型，得到对应的分值
+                chess = 1;
+                begin = i;
+                for (int j = begin + 1; (j < num) && (lineState[j] == color); j++) {
+                    chess++;
+                }
+                if (chess < 2) {
+                    continue;
+                }
+//                end = j - 1;//todo ???
+                end = num - 1;
+
+                space1 = 0;
+                space2 = 0;
+                for (int j = begin - 1; (j >= 0) && ((lineState[j] == 0) || (lineState[j] == color)); j--) {
+                    //棋子前面的空格
+                    space1++;
+                }
+                for (int j = end + 1; (j < num) && ((lineState[j] == 0) || (lineState[j] == color)); j++) {
+                    //棋子前面的空格
+                    space2++;
+                }
+
+                if (chess + space1 + space2 >= 6) {
+                    value += getValue(chess, space1, space2);
+                }
+                i = end + 1;
+            }
+        return value;
+    }
+
+    /**
+     * 获取空位价值
+     * 扩大左右，对每个空的点进行估值，每个点的分值为四个方向分值之和。
+     */
+    private void getTheSpaceValues() {
+        int left, top, right, bottom;
+        //todo
+        left = (chessBoard.left > 2) ? chessBoard.left - 2 : 0;
+        top = (chessBoard.top > 2) ? chessBoard.top - 2 : 0;
+        right = (chessBoard.right < ChessBoard.COLS - 1) ? chessBoard.right + 2 : ChessBoard.COLS;
+        bottom = (chessBoard.bottom < ChessBoard.ROWS - 1) ? chessBoard.bottom + 2 : ChessBoard.ROWS;
+        for (int i = left; i <= right; i++) {
+            for (int j = top; j <= bottom; j++) {
+                //对棋盘的所有点循环
+                blackValue[i][j] = 0;
+                whiteValue[i][j] = 0;
+                if (chessBoard.boardStatus[i][j] == 0) {
+                    //如果是空位，进行估值
+                    for (int m = 1; m <= 4; m++) {
+                        //每个点的分值为四个方向分值之和
+                        blackValue[i][j] += evaluateValue(1, i, j, m);
+                        whiteValue[i][j] += evaluateValue(2, i, j, m);
+                    }
                 }
             }
         }
@@ -475,145 +617,6 @@ public class Evaluate {
             //将棋的布局放入计算棋型的函数，获取棋型的真实价值
             value = getValue(chessCount1, chessCount2, chessCount3, spaceCount1, spaceCountOtherSide1, spaceCountOtherSide2, spaceCountOtherSide3);
         }
-        return value;
-    }
-
-    /**
-     * 查找棋盘上价值最大的几个空位，每个空位的价值等于两种棋的价值之和。
-     *
-     * @return 价值最大的几个空位（包括位置和估值）
-     */
-    private int[][] getTheMostValuablePositions() {
-        //所有格子的总数 = 行 * 列
-        int allSquareNum = (ChessBoard.COLS + 1) * (ChessBoard.ROWS + 1);
-        //保存每一格子的价值
-        //外层索引是格子数，里面一层的三个分别存的是：列坐标，行坐标，价值
-        //例如：allValue[0] = {column, row, value};
-        int[][] allValue = new int[allSquareNum][3];
-        //格子的索引
-        int squareIndex = 0;
-        //遍历所有格子
-        for (int i = 0; i < ChessBoard.COLS; i++) {
-            for (int j = 0; j < ChessBoard.ROWS; j++) {
-                if (chessBoard.boardStatus[i][j] == 0) {
-                    allValue[squareIndex][0] = i;
-                    allValue[squareIndex][1] = j;
-                    //价值 = 黑 + 白 + 静态位置
-                    allValue[squareIndex][2] = blackValue[i][j] + whiteValue[i][j] + staticValue[i][j];
-                    squareIndex++;
-                }
-            }
-        }
-
-        //按价值降序排序
-        sort(allValue);
-
-        //需要进行评估的可选点数量
-        //从“格子总数”和“自定义的可选点数量”里面取最小值，就是实际用的可选点数量
-        int realValuablePositionNum = Math.min(allSquareNum, MY_REAL_VALUABLE_POSITION_NUM);
-        int[][] valuablePositions = new int[realValuablePositionNum][3];
-        //按照自定义的选择数量，将有价值的点复制给可选点
-        for (int i = 0; i < realValuablePositionNum; i++) {
-            valuablePositions[i][0] = allValue[i][0];
-            valuablePositions[i][1] = allValue[i][1];
-            valuablePositions[i][2] = allValue[i][2];
-        }
-        return valuablePositions;
-    }
-
-    /**
-     * 静态评估
-     */
-    private int evaluateGame() {
-        int value = 0;
-        int[] line = new int[ChessBoard.COLS + 1];
-        //水平  对每一行估值
-        for (int j = 0; j <= ChessBoard.ROWS; j++) {
-            for (int i = 0; i <= ChessBoard.COLS; i++) {
-                //第一个下标是列下标
-                line[i] = chessBoard.boardStatus[i][j];
-            }
-            value += evaluateLine(line, ChessBoard.COLS + 1, 1);
-            value -= evaluateLine(line, ChessBoard.COLS + 1, 2);
-        }
-        //垂直 对每一列估值
-        for (int i = 0; i <= ChessBoard.COLS; i++) {
-            System.arraycopy(chessBoard.boardStatus[i], 0, line, 0, ChessBoard.ROWS + 1);
-            value += evaluateLine(line, ChessBoard.ROWS + 1, 1);
-            value -= evaluateLine(line, ChessBoard.ROWS + 1, 2);
-        }
-        // 左下到右上斜线估值
-        for (int j = 4; j <= ChessBoard.ROWS; j++) {
-            for (int k = 0; k <= j; k++) {
-                line[k] = chessBoard.boardStatus[k][j - k];
-            }
-            value += evaluateLine(line, j + 1, 1);
-            value -= evaluateLine(line, j + 1, 2);
-        }
-        for (int j = 1; j <= ChessBoard.ROWS - 4; j++) {
-            for (int k = 0; k <= ChessBoard.COLS - j; k++) {
-                line[k] = chessBoard.boardStatus[k + j][ChessBoard.ROWS - k];
-            }
-            value += evaluateLine(line, ChessBoard.ROWS + 1 - j, 1);
-            value -= evaluateLine(line, ChessBoard.ROWS + 1 - j, 2);
-        }
-        // 左上到右下斜线估值
-        for (int j = 0; j <= ChessBoard.ROWS - 4; j++) {
-            for (int k = 0; k <= ChessBoard.ROWS - j; k++) {
-                line[k] = chessBoard.boardStatus[k][k + j];
-            }
-            value += evaluateLine(line, ChessBoard.ROWS + 1 - j, 1);
-            value -= evaluateLine(line, ChessBoard.ROWS + 1 - j, 2);
-        }
-        for (int i = 1; i <= ChessBoard.COLS - 4; i++) {
-            for (int k = 0; k <= ChessBoard.ROWS - i; k++) {
-                line[k] = chessBoard.boardStatus[k + i][k];
-            }
-            value += evaluateLine(line, ChessBoard.ROWS + 1 - i, 1);
-            value -= evaluateLine(line, ChessBoard.ROWS + 1 - i, 2);
-        }
-        if (chessBoard.computerColor == 1) {
-            return value;
-        } else {
-            //另一方是负值
-            return -value;
-        }
-    }
-
-    private int evaluateLine(int[] lineState, int num, int color) {
-        int chess, space1, space2;
-        int value = 0;
-        int begin, end;
-        for (int i = 0; i < num; i++)
-            if (lineState[i] == color) {
-                //遇到要找的棋子，检查棋型，得到对应的分值
-                chess = 1;
-                begin = i;
-                for (int j = begin + 1; (j < num) && (lineState[j] == color); j++) {
-                    chess++;
-                }
-                if (chess < 2) {
-                    continue;
-                }
-//                end = j - 1;//todo ???
-                end = num - 1;
-
-                space1 = 0;
-                space2 = 0;
-                for (int j = begin - 1; (j >= 0) && ((lineState[j] == 0) || (lineState[j] == color)); j--) {
-                    //棋子前面的空格
-                    space1++;
-                }
-                for (int j = end + 1; (j < num) && ((lineState[j] == 0) || (lineState[j] == color)); j++) {
-                    //棋子前面的空格
-                    space2++;
-                }
-
-                if (chess + space1 + space2 >= 6) {
-                    value += getValue(chess, space1, space2);
-                }
-                i = end + 1;
-            }
         return value;
     }
 
