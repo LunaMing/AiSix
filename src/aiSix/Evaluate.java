@@ -66,46 +66,64 @@ public class Evaluate {
      * @return 最佳位置的坐标，先x后y
      */
     int[] getTheBestPosition() {
-        int maxValue = -INFINITY;
+        //最佳位置的坐标，先x后y
         int[] position = new int[2];
 
+        //获取所有可选点
         //获取每个格子的价值
         updateBlackAndWhiteValue();
-        //按照价值排序，产生可选点
+        //按照价值排序产生可选点
         int[][] valuablePositions = getTheMostValuablePositions();
 
+        //首先假设是最差情况
+        int maxValue = -INFINITY;
+        //遍历所有可选点，计算价值
         for (int[] valuablePosition : valuablePositions) {
-            if (valuablePosition[2] >= SIX) {
-                //已经连六
-                position[0] = valuablePosition[0];
-                position[1] = valuablePosition[1];
+            int x = valuablePosition[0];
+            int y = valuablePosition[1];
+            int v = valuablePosition[2];//价值
+
+            //如果价值已经比连续的六还大，就直接下
+            if (v >= SIX) {
+                //说明已经连六
+                position[0] = x;
+                position[1] = y;
                 break;
             }
-            chessBoard.boardStatus[valuablePosition[0]][valuablePosition[1]] = chessBoard.computerColor;
+
+            //假设先下了这一步棋
+            chessBoard.boardStatus[x][y] = chessBoard.computerColor;
+
             //改变LEFT、TOP等值
             int oldLeft = chessBoard.left;
             int oldTop = chessBoard.top;
             int oldRight = chessBoard.right;
             int oldBottom = chessBoard.bottom;
-            if (chessBoard.left > valuablePosition[0]) chessBoard.left = valuablePosition[0];
-            if (chessBoard.top > valuablePosition[1]) chessBoard.top = valuablePosition[1];
-            if (chessBoard.right < valuablePosition[0]) chessBoard.right = valuablePosition[0];
-            if (chessBoard.bottom < valuablePosition[1]) chessBoard.bottom = valuablePosition[1];
+            //边界检测
+            if (chessBoard.left > x) chessBoard.left = x;
+            if (chessBoard.top > y) chessBoard.top = y;
+            if (chessBoard.right < x) chessBoard.right = x;
+            if (chessBoard.bottom < y) chessBoard.bottom = y;
 
+            //调用Alpha-Beta算法
             int value = min(SEARCH_DEPTH, -INFINITY, INFINITY);
 
-            chessBoard.boardStatus[valuablePosition[0]][valuablePosition[1]] = 0;
+            //撤回了之前下的棋子
+            chessBoard.boardStatus[x][y] = 0;
+            //将LEFT、TOP等值恢复原样
             chessBoard.left = oldLeft;
             chessBoard.top = oldTop;
             chessBoard.right = oldRight;
             chessBoard.bottom = oldBottom;
 
+            //如果value比最大值还要大
             if (value > maxValue) {
                 maxValue = value;
-                position[0] = valuablePosition[0];
-                position[1] = valuablePosition[1];
+                position[0] = x;
+                position[1] = y;
             }
         }
+
         return position;
     }
 
