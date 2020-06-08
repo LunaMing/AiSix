@@ -28,6 +28,7 @@ public class Evaluate {
      * 对黑白价值、静态价值数组进行初始化
      */
     public Evaluate(ChessBoard chessBoard) {
+        //当前布局
         this.chessBoard = chessBoard;
 
         blackValue = new int[ChessBoard.COLS + 1][ChessBoard.ROWS + 1];
@@ -63,13 +64,12 @@ public class Evaluate {
      * @return 最佳位置的坐标
      */
     int[] getTheBestPosition() {
-        //获取空位的价值
-        getTheSpaceValues();
-
         int maxValue = -INFINITY;
-        int value;
         int[] position = new int[2];
 
+        //获取每个格子的价值
+        updateBlackAndWhiteValue();
+        //按照价值排序，产生可选点
         int[][] valuablePositions = getTheMostValuablePositions();
 
         for (int[] valuablePosition : valuablePositions) {
@@ -90,7 +90,7 @@ public class Evaluate {
             if (chessBoard.right < valuablePosition[0]) chessBoard.right = valuablePosition[0];
             if (chessBoard.bottom < valuablePosition[1]) chessBoard.bottom = valuablePosition[1];
 
-            value = min(SEARCH_DEPTH, -INFINITY, INFINITY);
+            int value = min(SEARCH_DEPTH, -INFINITY, INFINITY);
 
             chessBoard.boardStatus[valuablePosition[0]][valuablePosition[1]] = 0;
             chessBoard.left = oldLeft;
@@ -112,10 +112,12 @@ public class Evaluate {
      * @return //todo
      */
     private int min(int depth, int alpha, int beta) {
-        if (depth == 0) { //如果搜索到最底层，直接返回当前的估值。
+        if (depth == 0) {
+            //如果搜索到最底层，直接返回当前的估值。
             return evaluateGame();
         }
-        getTheSpaceValues();
+
+        updateBlackAndWhiteValue();
 
         int[][] valuablePositions = getTheMostValuablePositions();
 
@@ -157,9 +159,9 @@ public class Evaluate {
             //如果搜索到最底层，直接返回当前的估值。
             return evaluateGame();
         }
-        getTheSpaceValues();
 
-        int value;
+        updateBlackAndWhiteValue();
+
         int[][] valuablePositions = getTheMostValuablePositions();
 
         for (int[] valuablePosition : valuablePositions) {
@@ -173,7 +175,7 @@ public class Evaluate {
             if (chessBoard.right < valuablePosition[0]) chessBoard.right = valuablePosition[0];
             if (chessBoard.bottom < valuablePosition[1]) chessBoard.bottom = valuablePosition[1];
 
-            value = min(depth - 1, alpha, beta);
+            int value = min(depth - 1, alpha, beta);
 
             chessBoard.boardStatus[valuablePosition[0]][valuablePosition[1]] = 0;
             chessBoard.left = oldLeft;
@@ -191,77 +193,6 @@ public class Evaluate {
         return alpha;
     }
 
-    /**
-     * 对数组按第三列（allValue[][2]降序排序)
-     *
-     * @param allValue: 待排序的数组，二维数组的前两列是棋盘位置坐标，第3列是该位置的价值
-     */
-    private void sort(int[][] allValue) {
-        for (int i = 0; i < allValue.length; i++) {
-            for (int j = 0; j < allValue.length - 1; j++) {
-                int ti, tj, tvalue;
-                if (allValue[j][2] < allValue[j + 1][2]) {
-                    tvalue = allValue[j][2];
-                    allValue[j][2] = allValue[j + 1][2];
-                    allValue[j + 1][2] = tvalue;
-
-                    ti = allValue[j][0];
-                    allValue[j][0] = allValue[j + 1][0];
-                    allValue[j + 1][0] = ti;
-
-                    tj = allValue[j][1];
-                    allValue[j][1] = allValue[j + 1][1];
-                    allValue[j + 1][1] = tj;
-
-                }
-            }
-        }
-    }
-
-
-
-    /**
-     * 查找棋盘上价值最大的几个空位，每个空位的价值等于两种棋的价值之和。
-     *
-     * @return 价值最大的几个空位（包括位置和估值）
-     */
-    private int[][] getTheMostValuablePositions() {
-        //所有格子的总数 = 行 * 列
-        int allSquareNum = (ChessBoard.COLS + 1) * (ChessBoard.ROWS + 1);
-        //保存每一格子的价值
-        //外层索引是格子数，里面一层的三个分别存的是：列坐标，行坐标，价值
-        //例如：allValue[0] = {column, row, value};
-        int[][] allValue = new int[allSquareNum][3];
-        //格子的索引
-        int squareIndex = 0;
-        //遍历所有格子
-        for (int i = 0; i < ChessBoard.COLS; i++) {
-            for (int j = 0; j < ChessBoard.ROWS; j++) {
-                if (chessBoard.boardStatus[i][j] == 0) {
-                    allValue[squareIndex][0] = i;
-                    allValue[squareIndex][1] = j;
-                    //价值 = 黑 + 白 + 静态位置
-                    allValue[squareIndex][2] = blackValue[i][j] + whiteValue[i][j] + staticValue[i][j];
-                    squareIndex++;
-                }
-            }
-        }
-
-        //按价值降序排序
-        sort(allValue);
-
-        //需要进行评估的可选点数量
-        //从“格子总数”和“自定义的可选点数量”里面取最小值，就是实际用的可选点数量
-        int realValuablePositionNum = Math.min(allSquareNum, MY_REAL_VALUABLE_POSITION_NUM);
-        int[][] valuablePositions = new int[realValuablePositionNum][3];
-        //按照自定义的选择数量，将有价值的点复制给可选点
-        for (int i = 0; i < realValuablePositionNum; i++) {
-            valuablePositions[i][0] = allValue[i][0];
-            valuablePositions[i][1] = allValue[i][1];
-            valuablePositions[i][2] = allValue[i][2];
-        }
-        return valuablePositions;
-    }
 
     /**
      * 静态评估
@@ -269,7 +200,7 @@ public class Evaluate {
     private int evaluateGame() {
         int value = 0;
         int[] line = new int[ChessBoard.COLS + 1];
-        //水平  对每一行估值
+        //水平 对每一行估值
         for (int j = 0; j <= ChessBoard.ROWS; j++) {
             for (int i = 0; i <= ChessBoard.COLS; i++) {
                 //第一个下标是列下标
@@ -322,6 +253,9 @@ public class Evaluate {
         }
     }
 
+    /**
+     * 一行的连珠数数
+     */
     private int evaluateLine(int[] lineState, int num, int color) {
         int chess, space1, space2;
         int value = 0;
@@ -352,22 +286,182 @@ public class Evaluate {
                 }
 
                 if (chess + space1 + space2 >= 6) {
-                    value += getValue(chess, space1, space2);
+                    value += getValueByThree(chess, space1, space2);
                 }
                 i = end + 1;
             }
         return value;
     }
 
+    /**
+     * 根据棋型，计算该点下一个棋子的价值
+     * 看两层，也就是防止 AAOA 的情况
+     *
+     * @param chessCount1          该空位置下一个棋子后同种颜色棋子连续的个数 A后边连续的A个数
+     * @param spaceCount1          连续棋子一端的连续空位数 A...AOOO O的个数
+     * @param chessCount2          如果spaceCount1 = 1，继续连续同种颜色棋子的个数 AOAAAA 后边的A的个数
+     * @param spaceCount2          继chessCount2之后，连续空位数 AOA..AOOOO O的个数
+     * @param spaceCountOtherSide1 连续棋子另一端的连续空位数
+     * @param chessCountOtherSide1 如果spaceCountOtherSide1 = 1，继续连续同种颜色棋子的个数
+     * @param spaceCountOtherSide2 继chessCountOtherSide1之后，连续空位数
+     * @return 在该点放棋子会带来的价值
+     */
+    private int getValue(int chessCount1, int chessCount2, int chessCountOtherSide1,
+                         int spaceCount1, int spaceCount2, int spaceCountOtherSide1,
+                         int spaceCountOtherSide2) {
+        int value = 0;
+        //将六子棋棋型分为连六、活五、眠五、活四、眠四、活三、朦胧三、眠三、活二、眠二
+        //棋型：用A表示本颜色棋子，用B表示对方棋子，用O表示空位
+        switch (chessCount1) {
+            case 6:
+                //如果连续棋子数量为6，已经可以连成6子，则赢棋
+                //AAAAAA
+                value = SIX;
+                break;
+            case 5:
+                //如果连续棋子数量为5
+                if ((spaceCount1 > 0) && (spaceCountOtherSide1 > 0)) {
+                    //活五，也就是两边都空着，两方空白都大于零
+                    //OAAAAAO
+                    value = HUO_FIVE;
+                } else if (((spaceCount1 == 0) && (spaceCountOtherSide1 > 0)) ||
+                        ((spaceCount1 > 0) && (spaceCountOtherSide1 == 0))) {
+                    //眠五
+                    //一边有空位一边到头了
+                    //OAAAAAB
+                    value = MIAN_FIVE;
+                }
+                break;
+            case 4:
+                if ((spaceCount1 > 1) && (spaceCountOtherSide1 > 1)) {
+                    //活四
+                    value = HUO_FOUR;
+                } else if (((spaceCount1 > 1) && (spaceCountOtherSide1 == 0)) ||
+                        ((spaceCount1 == 0) && (spaceCountOtherSide1 > 1))) {
+                    //眠四
+                    value = MIAN_FOUR;
+                }
+                break;
+            case 3:
+                if ((spaceCount1 > 2) && (spaceCountOtherSide1 > 2)) {
+                    //OOOAAAOOO
+                    value = HUO_THREE;
+                } else if (((spaceCount1 == 0) && (spaceCountOtherSide1 > 3)) ||
+                        ((spaceCountOtherSide1 > 3) && (chessCountOtherSide1 == 0))) {
+                    //AAAOOO
+                    value = MIAN_THREE;
+                }
+                break;
+            case 2:
+                if ((spaceCount1 > 3) && (spaceCountOtherSide1 > 3)) {
+                    //活二
+                    value = HUO_TWO;
+                } else if (((spaceCount1 > 3) && (spaceCountOtherSide1 == 0)) ||
+                        ((spaceCount1 == 0) && (spaceCountOtherSide1 > 3))) {
+                    //眠二
+                    value = MIAN_TWO;
+                } else if (((spaceCount1 == 1) && (chessCount2 == 1) && (spaceCount2 == 2) && (spaceCountOtherSide1 == 1)) ||
+                        ((spaceCount1 == 1) && (chessCountOtherSide1 == 1) && (spaceCountOtherSide1 == 1) && (spaceCountOtherSide2 == 2))) {
+                    //BOOAOAAOB
+                    value = MENGLONG_THREE;
+                }
+                break;
+            case 1:
+                if (((spaceCount1 == 2) && (spaceCountOtherSide1 == 1) && (chessCountOtherSide1 == 2) && (spaceCountOtherSide2 == 1)) ||
+                        ((spaceCount1 == 1) && (spaceCount2 == 1) && (chessCount2 == 2) && (spaceCountOtherSide1 == 2))) {
+                    //BOOAOAAOB
+                    value = MENGLONG_THREE;
+                }
+                break;
+            default:
+                value = 0;
+                break;
+        }
+        return value;
+    }
+
+    /*----------------------------产生可选点------------------------------*/
+
+    /**
+     * 查找棋盘上价值最大的几个空位，每个空位的价值等于两种棋的价值之和。
+     *
+     * @return 价值最大的几个空位（包括位置和估值）
+     */
+    private int[][] getTheMostValuablePositions() {
+        //所有格子的总数 = 行 * 列
+        int allSquareNum = (ChessBoard.COLS + 1) * (ChessBoard.ROWS + 1);
+        //保存每一格子的价值
+        //外层索引是格子数，里面一层的三个分别存的是：列坐标，行坐标，价值
+        //例如：allValue[0] = {column, row, value};
+        int[][] allValue = new int[allSquareNum][3];
+        //格子的索引
+        int squareIndex = 0;
+        //遍历所有格子
+        for (int i = 0; i < ChessBoard.COLS; i++) {
+            for (int j = 0; j < ChessBoard.ROWS; j++) {
+                if (chessBoard.boardStatus[i][j] == 0) {
+                    allValue[squareIndex][0] = i;
+                    allValue[squareIndex][1] = j;
+                    //价值 = 黑 + 白 + 静态位置
+                    allValue[squareIndex][2] = blackValue[i][j] + whiteValue[i][j] + staticValue[i][j];
+                    squareIndex++;
+                }
+            }
+        }
+
+        //按价值降序排序
+        sort(allValue);
+
+        //需要进行评估的可选点数量
+        //从“格子总数”和“自定义的可选点数量”里面取最小值，就是实际用的可选点数量
+        int realValuablePositionNum = Math.min(allSquareNum, MY_REAL_VALUABLE_POSITION_NUM);
+        int[][] valuablePositions = new int[realValuablePositionNum][3];
+        //按照自定义的选择数量，将有价值的点复制给可选点
+        for (int i = 0; i < realValuablePositionNum; i++) {
+            valuablePositions[i][0] = allValue[i][0];
+            valuablePositions[i][1] = allValue[i][1];
+            valuablePositions[i][2] = allValue[i][2];
+        }
+        return valuablePositions;
+    }
+
+    /**
+     * 对数组按第三列（allValue[][2]降序排序）
+     *
+     * @param allValue: 待排序的数组，二维数组的前两列是棋盘位置坐标，第3列是该位置的价值
+     */
+    private void sort(int[][] allValue) {
+        for (int i = 0; i < allValue.length; i++) {
+            for (int j = 0; j < allValue.length - 1; j++) {
+                int ti, tj, tvalue;
+                if (allValue[j][2] < allValue[j + 1][2]) {
+                    tvalue = allValue[j][2];
+                    allValue[j][2] = allValue[j + 1][2];
+                    allValue[j + 1][2] = tvalue;
+
+                    ti = allValue[j][0];
+                    allValue[j][0] = allValue[j + 1][0];
+                    allValue[j + 1][0] = ti;
+
+                    tj = allValue[j][1];
+                    allValue[j][1] = allValue[j + 1][1];
+                    allValue[j + 1][1] = tj;
+
+                }
+            }
+        }
+    }
+
+
     /*----------------------------静态评估------------------------------*/
 
     /**
-     * 获取空位价值
-     * 扩大左右，对每个空的点进行估值，每个点的分值为四个方向分值之和。
+     * 更新每格的黑白价值
+     * 按照当前局面，给每个格子的黑白价值进行更新，每个点的分值为四个方向分值之和。
+     * 调用了评估棋型，里面是用数连珠的方法
      */
-    private void getTheSpaceValues() {
+    private void updateBlackAndWhiteValue() {
         int left, top, right, bottom;
-        //todo
         left = (chessBoard.left > 2) ? chessBoard.left - 2 : 0;
         top = (chessBoard.top > 2) ? chessBoard.top - 2 : 0;
         right = (chessBoard.right < ChessBoard.COLS - 1) ? chessBoard.right + 2 : ChessBoard.COLS;
@@ -375,15 +469,19 @@ public class Evaluate {
         for (int i = left; i <= right; i++) {
             for (int j = top; j <= bottom; j++) {
                 //对棋盘的所有点循环
-                blackValue[i][j] = 0;
-                whiteValue[i][j] = 0;
                 if (chessBoard.boardStatus[i][j] == 0) {
                     //如果是空位，进行估值
                     for (int m = 1; m <= 4; m++) {
                         //每个点的分值为四个方向分值之和
+                        //要计算的是哪一方的价值，1：黑方，2：白方
+                        //要计算方向，1：水平，2：垂直，3：左上到右下，4：右上到左下
                         blackValue[i][j] += evaluateValue(1, i, j, m);
                         whiteValue[i][j] += evaluateValue(2, i, j, m);
                     }
+                } else {
+                    //如果不是空位，就没有价值
+                    blackValue[i][j] = 0;
+                    whiteValue[i][j] = 0;
                 }
             }
         }
@@ -564,14 +662,16 @@ public class Evaluate {
             }
             //右上到左下
             case 4 -> {
-                for (columnCount = colomn + 1, rowCount = row - 1; columnCount <= ChessBoard.COLS && rowCount >= 0; columnCount++, rowCount--) {  //查找连续的同色棋子
+                for (columnCount = colomn + 1, rowCount = row - 1; columnCount <= ChessBoard.COLS && rowCount >= 0; columnCount++, rowCount--) {
+                    //查找连续的同色棋子
                     if (chessBoard.boardStatus[columnCount][rowCount] == color) {
                         chessCount1++;
                     } else {
                         break;
                     }
                 }
-                while (columnCount <= ChessBoard.COLS && rowCount >= 0 && (chessBoard.boardStatus[columnCount][rowCount] == 0)) { //统计空位数
+                while (columnCount <= ChessBoard.COLS && rowCount >= 0 && (chessBoard.boardStatus[columnCount][rowCount] == 0)) {
+                    //统计空位数
                     spaceCount1++;
                     columnCount++;
                     rowCount--;
@@ -588,14 +688,16 @@ public class Evaluate {
                         rowCount--;
                     }
                 }
-                for (columnCount = colomn - 1, rowCount = row + 1; columnCount >= 0 && rowCount <= ChessBoard.ROWS; columnCount--, rowCount++) {  //查找连续的同色棋子
+                for (columnCount = colomn - 1, rowCount = row + 1; columnCount >= 0 && rowCount <= ChessBoard.ROWS; columnCount--, rowCount++) {
+                    //查找连续的同色棋子
                     if (chessBoard.boardStatus[columnCount][rowCount] == color) {
                         chessCount1++;
                     } else {
                         break;
                     }
                 }
-                while (columnCount >= 0 && rowCount <= ChessBoard.ROWS && (chessBoard.boardStatus[columnCount][rowCount] == 0)) { // 统计空位数
+                while (columnCount >= 0 && rowCount <= ChessBoard.ROWS && (chessBoard.boardStatus[columnCount][rowCount] == 0)) {
+                    // 统计空位数
                     spaceCountOtherSide2++;
                     columnCount--;
                     rowCount++;
@@ -632,7 +734,7 @@ public class Evaluate {
      * @param spaceCountOtherSide 连续棋子另一端的连续空位数
      * @return 该点放棋子会带来的价值
      */
-    private int getValue(int chessCount, int spaceCount, int spaceCountOtherSide) {
+    private int getValueByThree(int chessCount, int spaceCount, int spaceCountOtherSide) {
         int value = 0;
         //将六子棋棋型分为连六、活五、眠五、活四、眠四、活三、朦胧三、眠三、活二、眠二
         switch (chessCount) {
@@ -671,92 +773,6 @@ public class Evaluate {
         return value;
     }
 
-    /**
-     * 根据棋型，计算该点下一个棋子的价值
-     * 看两层，也就是防止 AAOA 的情况
-     *
-     * @param chessCount1          该空位置下一个棋子后同种颜色棋子连续的个数 A后边连续的A个数
-     * @param spaceCount1          连续棋子一端的连续空位数 A...AOOO O的个数
-     * @param chessCount2          如果spaceCount1 = 1，继续连续同种颜色棋子的个数 AOAAAA 后边的A的个数
-     * @param spaceCount2          继chessCount2之后，连续空位数 AOA..AOOOO O的个数
-     * @param spaceCountOtherSide1 连续棋子另一端的连续空位数
-     * @param chessCountOtherSide1 如果spaceCountOtherSide1 = 1，继续连续同种颜色棋子的个数
-     * @param spaceCountOtherSide2 继chessCountOtherSide1之后，连续空位数
-     * @return 在该点放棋子会带来的价值
-     */
-    private int getValue(int chessCount1, int chessCount2, int chessCountOtherSide1,
-                         int spaceCount1, int spaceCount2, int spaceCountOtherSide1,
-                         int spaceCountOtherSide2) {
-        int value = 0;
-        //将六子棋棋型分为连六、活五、眠五、活四、眠四、活三、朦胧三、眠三、活二、眠二
-        //棋型：用A表示本颜色棋子，用B表示对方棋子，用O表示空位
-        switch (chessCount1) {
-            case 6:
-                //如果连续棋子数量为6，已经可以连成6子，则赢棋
-                //AAAAAA
-                value = SIX;
-                break;
-            case 5:
-                //如果连续棋子数量为5
-                if ((spaceCount1 > 0) && (spaceCountOtherSide1 > 0)) {
-                    //活五，也就是两边都空着，两方空白都大于零
-                    //OAAAAAO
-                    value = HUO_FIVE;
-                } else if (((spaceCount1 == 0) && (spaceCountOtherSide1 > 0)) ||
-                        ((spaceCount1 > 0) && (spaceCountOtherSide1 == 0))) {
-                    //眠五
-                    //一边有空位一边到头了
-                    //OAAAAAB
-                    value = MIAN_FIVE;
-                }
-                break;
-            case 4:
-                if ((spaceCount1 > 1) && (spaceCountOtherSide1 > 1)) {
-                    //活四
-                    value = HUO_FOUR;
-                } else if (((spaceCount1 > 1) && (spaceCountOtherSide1 == 0)) ||
-                        ((spaceCount1 == 0) && (spaceCountOtherSide1 > 1))) {
-                    //眠四
-                    value = MIAN_FOUR;
-                }
-                break;
-            case 3:
-                if ((spaceCount1 > 2) && (spaceCountOtherSide1 > 2)) {
-                    //OOOAAAOOO
-                    value = HUO_THREE;
-                } else if (((spaceCount1 == 0) && (spaceCountOtherSide1 > 3)) ||
-                        ((spaceCountOtherSide1 > 3) && (chessCountOtherSide1 == 0))) {
-                    //AAAOOO
-                    value = MIAN_THREE;
-                }
-                break;
-            case 2:
-                if ((spaceCount1 > 3) && (spaceCountOtherSide1 > 3)) {
-                    //活二
-                    value = HUO_TWO;
-                } else if (((spaceCount1 > 3) && (spaceCountOtherSide1 == 0)) ||
-                        ((spaceCount1 == 0) && (spaceCountOtherSide1 > 3))) {
-                    //眠二
-                    value = MIAN_TWO;
-                } else if (((spaceCount1 == 1) && (chessCount2 == 1) && (spaceCount2 == 2) && (spaceCountOtherSide1 == 1)) ||
-                        ((spaceCount1 == 1) && (chessCountOtherSide1 == 1) && (spaceCountOtherSide1 == 1) && (spaceCountOtherSide2 == 2))) {
-                    //BOOAOAAOB
-                    value = MENGLONG_THREE;
-                }
-                break;
-            case 1:
-                if (((spaceCount1 == 2) && (spaceCountOtherSide1 == 1) && (chessCountOtherSide1 == 2) && (spaceCountOtherSide2 == 1)) ||
-                        ((spaceCount1 == 1) && (spaceCount2 == 1) && (chessCount2 == 2) && (spaceCountOtherSide1 == 2))) {
-                    //BOOAOAAOB
-                    value = MENGLONG_THREE;
-                }
-                break;
-            default:
-                value = 0;
-                break;
-        }
-        return value;
-    }
 
 }
 
