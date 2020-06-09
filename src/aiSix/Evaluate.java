@@ -539,7 +539,7 @@ public class Evaluate {
         int spaceCountOtherSide3 = 0; //另一端空位数
         switch (direction) {
             //水平方向
-            case 1 -> {
+            case 1: {
                 //向增加的方向查找相同颜色连续的棋子
                 for (columnCount = colomn + 1; columnCount <= ChessBoard.COLS; columnCount++) {
                     if (chessBoard.boardStatus[columnCount][row] == color) {
@@ -586,9 +586,10 @@ public class Evaluate {
                         columnCount--;
                     }
                 }
+                break;
             }
             //垂直方向
-            case 2 -> {
+            case 2: {
                 //向增加的方向查找相同颜色连续的棋子
                 for (columnCount = row + 1; columnCount <= ChessBoard.ROWS; columnCount++) {
                     if (chessBoard.boardStatus[colomn][columnCount] == color) {
@@ -635,9 +636,10 @@ public class Evaluate {
                         columnCount--;
                     }
                 }
+                break;
             }
             //左上到右下
-            case 3 -> {
+            case 3: {
                 //向增加的方向查找相同颜色连续的棋子
                 for (columnCount = colomn + 1, rowCount = row + 1; (columnCount <= ChessBoard.COLS) && (rowCount <= ChessBoard.ROWS); columnCount++, rowCount++) {
                     if (chessBoard.boardStatus[columnCount][rowCount] == color) {
@@ -690,9 +692,10 @@ public class Evaluate {
                         rowCount--;
                     }
                 }
+                break;
             }
             //右上到左下
-            case 4 -> {
+            case 4: {
                 for (columnCount = colomn + 1, rowCount = row - 1; columnCount <= ChessBoard.COLS && rowCount >= 0; columnCount++, rowCount--) {
                     //查找连续的同色棋子
                     if (chessBoard.boardStatus[columnCount][rowCount] == color) {
@@ -745,6 +748,7 @@ public class Evaluate {
                         rowCount++;
                     }
                 }
+                break;
             }
         }
         if (chessCount1 + chessCount2 + chessCount3 + spaceCount1 + spaceCountOtherSide1 + spaceCountOtherSide2 + spaceCountOtherSide3 >= 6) {
