@@ -16,7 +16,7 @@ public class Evaluate {
     private static final int MIAN_TWO = 50;
 
     private static final int INFINITY = 10000000;//无穷大
-    private static final int SEARCH_DEPTH = 5;//搜索深度
+    private static final int SEARCH_DEPTH = 4;//搜索深度
     private static final int MY_REAL_VALUABLE_POSITION_NUM = 10;//可选点的最多搜索数量
 
     private final ChessBoard chessBoard;// 输入的棋盘布局
