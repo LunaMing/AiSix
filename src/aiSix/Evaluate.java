@@ -173,7 +173,7 @@ public class Evaluate {
     }
 
     /**
-     * Alpha-Beta算法的min
+     * Alpha-Beta算法的max
      *
      * @param depth 搜索的深度
      * @return 最优价值
